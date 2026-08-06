@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl" data-platform-name="بوابة خدمات الموجه الطلابي">
 <head>
-  <meta name="app-version" content="10.1.0">
+  <meta name="app-version" content="12.0.0">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#086c8f">
@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v10.1.0-20260806">
+  <link rel="stylesheet" href="styles-v12.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="support-widget.css?v10.1.0-20260806">
 </head>
@@ -24,7 +24,7 @@
         <span class="eyebrow">منصة موحدة لخدمات التوجيه الطلابي</span>
         <h1>كل أدوات الموجه<br><b>في بوابة واحدة</b></h1>
         <p>سجّل الدخول مرة واحدة، ثم ادخل إلى المنصات المشمولة في باقتك. تظهر المنصات الأخرى بحالة غير مفعلة حتى طلب الاشتراك.</p>
-        <div class="intro-points"><span>تحليل النتائج</span><span>السجلات الرقمية</span><span>العروض التقديمية</span><span>إدارة موحدة للباقات</span><span>هوية المدرسة</span></div>
+        <div class="intro-points"><span>تحليل النتائج</span><span>السجلات الرقمية</span><span>العروض التقديمية</span><span>خطة الموجه الطلابي</span><span>إدارة موحدة للباقات</span><span>هوية المدرسة</span></div>
       </div>
       <div class="auth-card">
         <div class="auth-head"><span>حساب المدرسة</span><h2>تسجيل الدخول</h2><p>استخدم الحساب نفسه للدخول إلى جميع المنصات المشمولة في باقتك.</p></div>
@@ -117,13 +117,14 @@
               <button class="plan-choice" data-quick-plan="results_analysis" type="button"><span>▥</span> تحليل النتائج</button>
               <button class="plan-choice" data-quick-plan="guidance_records" type="button"><span>▤</span> السجلات الرقمية</button>
               <button class="plan-choice" data-quick-plan="presentations" type="button"><span>▰</span> العروض التقديمية</button>
+              <button class="plan-choice" data-quick-plan="counselor_plan" type="button"><span>▦</span> خطة الموجه</button>
             </div>
           </article>
           <article class="compact-plan-card comprehensive-plan">
             <div class="comprehensive-badge">الأوفر للمدرسة</div>
             <div class="compact-plan-head"><div><span>الباقة الشاملة</span><h3>50 <small>ريالًا شهريًا</small></h3></div><strong>300 ريال سنويًا</strong></div>
             <p>تفتح كل المنصات المتاحة، وتضم أي منصة جديدة عند إطلاقها ضمن مدة الاشتراك.</p>
-            <ul><li>تحليل النتائج التعليمية</li><li>السجلات الرقمية</li><li>العروض التقديمية</li><li>المنصات القادمة</li></ul>
+            <ul><li>تحليل النتائج التعليمية</li><li>السجلات الرقمية</li><li>العروض التقديمية</li><li>خطة الموجه الطلابي</li><li>المنصات القادمة</li></ul>
             <button class="primary-button comprehensive-button" data-quick-plan="all_access" type="button">طلب الباقة الشاملة</button>
           </article>
         </div>
@@ -149,6 +150,7 @@
         <label class="option-card"><input type="radio" name="productCode" value="results_analysis" checked><span><b>منصة تحليل النتائج</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card"><input type="radio" name="productCode" value="guidance_records"><span><b>منصة السجلات الرقمية</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card"><input type="radio" name="productCode" value="presentations"><span><b>منصة العروض التقديمية</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
+        <label class="option-card"><input type="radio" name="productCode" value="counselor_plan"><span><b>منصة خطة الموجه الطلابي</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card featured-option"><input type="radio" name="productCode" value="all_access"><span><b>الباقة الشاملة</b><small>50 شهريًا أو 300 سنويًا</small></span></label>
       </div>
       <div class="period-options"><label><input type="radio" name="billingPeriod" value="monthly" checked><span>شهري</span></label><label><input type="radio" name="billingPeriod" value="yearly"><span>سنوي</span></label></div>
@@ -170,7 +172,7 @@
   </div>
 
   <div id="toast" class="toast" hidden></div>
-  <script src="app.js?v10.1.0-20260806"></script>
+  <script src="app-v12.js"></script>
   <script src="support-widget.js?v10.1.0-20260806"></script>
 </body>
 </html>

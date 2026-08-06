@@ -1,9 +1,16 @@
 {
-  "version": "11.0.0",
-  "release": "Student unified reports for guidance records",
-  "records_assets": {
-    "app": "records/app-v11.js",
-    "styles": "records/styles-v11.css"
-  },
+  "version": "13.0.0",
+  "release": "Electronic counselor plan editing and progress tracking",
+  "new_features": [
+    "editable_holiday_dates",
+    "week_editor_modal",
+    "live_completion_rate",
+    "printable_progress_summary",
+    "cloud_progress_fields"
+  ],
+  "new_assets": [
+    "plans/app-v13.js",
+    "plans/styles-v13.css"
+  ],
   "pages_source": "main:/"
 }
