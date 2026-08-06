@@ -20,6 +20,43 @@ function isAdmin(){return Boolean(state.account?.is_system_admin)}
 function hasAllAccess(){return isAdmin()||activeEntitlements().some(e=>e.product_code==='all_access')}
 function hasAccess(code){return isAdmin()||hasAllAccess()||activeEntitlements().some(e=>e.product_code===code)}
 function hasPaidPackage(){return activeEntitlements().length>0||isAdmin()}
+function activePackageFor(code){return activeEntitlements().find(e=>e.product_code===code)||null}
+function planEligibility(product,period){
+  if(isAdmin())return{allowed:false,kind:'admin',message:'مدير النظام لديه صلاحية كاملة لجميع المنصات ولا يحتاج إلى اشتراك.'};
+  const bundle=activePackageFor('all_access');
+  const target=activePackageFor(product);
+  if(product!=='all_access'&&bundle)return{allowed:false,kind:'covered',message:'أنت مشترك في الباقة الشاملة بالفعل، وهذه الباقة مشمولة فيها.'};
+  if(target){
+    if(target.billing_period===period)return{allowed:false,kind:'same',message:'أنت بالفعل مشترك في هذه الباقة بنفس الخطة.'};
+    if(target.billing_period==='yearly'&&period==='monthly')return{allowed:false,kind:'downgrade',message:'لا يمكن التحويل من الخطة السنوية إلى الشهرية أثناء سريان الاشتراك.'};
+    if(target.billing_period==='monthly'&&period==='yearly')return{allowed:true,kind:'period_upgrade',message:`ترقية إلى الخطة السنوية: سيُضاف العام الجديد بعد نهاية المدة الحالية، والمتبقي الآن ${formatRemainingTime(target.expires_at)}.`};
+  }
+  if(product==='all_access'){
+    const individuals=activeEntitlements().filter(e=>e.product_code!=='all_access');
+    if(individuals.length){
+      const names=individuals.map(e=>LABELS[e.product_code]||e.product_code).join('، ');
+      return{allowed:true,kind:'bundle_upgrade',message:`ترقية إلى الباقة الشاملة: ستعمل كل المنصات لمدة ${period==='monthly'?'شهر':'سنة'}. سيتم حفظ الوقت المتبقي في ${names} واستكماله تلقائيًا بعد انتهاء الباقة الشاملة.`};
+    }
+  }
+  return{allowed:true,kind:'new',message:'يمكن إرسال طلب التفعيل بعد التواصل عبر واتساب.'};
+}
+
+function formatRemainingTime(expiresAt){
+  const ms=Math.max(0,new Date(expiresAt).getTime()-Date.now());
+  const totalHours=Math.ceil(ms/3600000);const days=Math.floor(totalHours/24);const hours=totalHours%24;
+  if(days>0)return `${days} يوم${days===1?'':'ًا'}${hours?` و${hours} ساعة`:''}`;
+  return hours>0?`${hours} ساعة`:'أقل من ساعة';
+}
+function subscriptionErrorMessage(error){
+  const raw=String(error?.message||error||'');
+  if(raw.includes('already_subscribed_same_plan'))return 'أنت بالفعل مشترك في هذه الباقة بنفس الخطة، ولا تحتاج إلى إرسال طلب تفعيل جديد.';
+  if(raw.includes('downgrade_not_allowed_while_active'))return 'لا يمكن الانتقال من الخطة السنوية إلى الشهرية أثناء سريان الاشتراك الحالي.';
+  if(raw.includes('all_access_already_covers_package'))return 'الباقة الشاملة مفعّلة بالفعل وتشمل هذه المنصة، لذلك لا يمكن طلب باقة منفصلة لها.';
+  if(raw.includes('request_not_pending'))return 'هذا الطلب تمت مراجعته بالفعل.';
+  if(raw.includes('request_not_found'))return 'لم يتم العثور على طلب التفعيل.';
+  return raw||'تعذر تنفيذ العملية.';
+}
+
 function platformLaunchKey(code){return `unified_platform_launch_${code}`}
 function rememberPlatformLaunch(code){
   try{
@@ -56,7 +93,7 @@ async function loadAccount(){
 function planSummary(){
  if(isAdmin())return{title:'مدير النظام',details:'صلاحية كاملة لجميع المنصات والباقات.',chips:['جميع المنصات']};
  const active=activeEntitlements();const all=active.find(e=>e.product_code==='all_access');
- if(all)return{title:'الباقة الشاملة',details:`${all.billing_period==='monthly'?'اشتراك شهري':'اشتراك سنوي'} — سارية حتى ${formatDate(all.expires_at)}`,chips:['تحليل النتائج','السجلات الرقمية','كل المنصات القادمة']};
+ if(all){const resumed=active.filter(e=>e.product_code!=='all_access'&&new Date(e.expires_at).getTime()>new Date(all.expires_at).getTime());const resumeText=resumed.length?` — وبعد انتهائها تُستأنف ${resumed.map(e=>LABELS[e.product_code]||e.product_code).join('، ')} حتى ${formatDate(resumed.reduce((m,e)=>new Date(e.expires_at)>new Date(m.expires_at)?e:m).expires_at)}`:'';return{title:'الباقة الشاملة',details:`${all.billing_period==='monthly'?'اشتراك شهري':'اشتراك سنوي'} — سارية حتى ${formatDate(all.expires_at)}${resumeText}`,chips:['تحليل النتائج','السجلات الرقمية','كل المنصات القادمة']};}
  if(!active.length)return{title:'حساب تجريبي',details:'لا توجد باقة مدفوعة نشطة. يمكنك استعراض المنصات المتاحة بصورة تجريبية قبل الاشتراك.',chips:['تجربة محدودة']};
  const chips=active.map(e=>LABELS[e.product_code]||e.product_code);return{title:chips.join(' + '),details:active.map(e=>`${LABELS[e.product_code]||e.product_code}: حتى ${formatDate(e.expires_at)}`).join(' — '),chips};
 }
@@ -72,7 +109,7 @@ function renderIdentity(){
 function platformStatus(p){
  if(!p.available)return{mode:'coming',label:'قريبًا',meta:'قيد التطوير',button:'ستتاح لاحقًا'};
  if(hasAccess(p.code)){
-   const e=activeEntitlements().find(x=>x.product_code===p.code)||activeEntitlements().find(x=>x.product_code==='all_access');
+   const e=activeEntitlements().find(x=>x.product_code==='all_access')||activeEntitlements().find(x=>x.product_code===p.code);
    return{mode:'active',label:'مفعّلة',meta:isAdmin()?'متاحة لمدير النظام':e?`سارية حتى ${formatDate(e.expires_at)}`:'متاحة',button:'دخول المنصة'};
  }
  if(!hasPaidPackage())return{mode:'trial',label:'تجربة محدودة',meta:'الحفظ والطباعة غير متاحين',button:'دخول التجربة'};
@@ -105,14 +142,33 @@ async function signUp(){const email=clean(el.authEmail.value),password=el.authPa
 async function signOut(){clearPlatformLaunches();await db.auth.signOut();await applySession(null)}
 async function saveProfile(){const school=clean(el.schoolProfileName.value),name=clean(el.profileFullName.value);if(!school)return showStatus(el.profileStatus,'اكتب اسم المدرسة.',true);el.saveSchoolProfileButton.disabled=true;try{const logo=state.pendingLogo||state.account?.school_logo_data||null;const{data,error}=await db.rpc('premium_update_school_profile',{p_full_name:name||state.user.email,p_school_name:school,p_school_logo_data:logo});if(error)throw error;state.account={...state.account,...data};state.pendingLogo=null;renderIdentity();showStatus(el.profileStatus,'تم حفظ اسم المدرسة والشعار.')}catch(e){showStatus(el.profileStatus,e.message||'تعذر حفظ البيانات.',true)}finally{el.saveSchoolProfileButton.disabled=false}}
 function selectedPlan(){const product=$all('input[name="productCode"]').find(x=>x.checked)?.value||'results_analysis';const period=$all('input[name="billingPeriod"]').find(x=>x.checked)?.value||'monthly';const comprehensive=product==='all_access';const amount=comprehensive?(period==='monthly'?50:300):(period==='monthly'?10:50);return{product,period,amount,label:LABELS[product]}}
-function updatePlan(){const p=selectedPlan();el.selectedPlanName.textContent=`${p.label} — ${p.period==='monthly'?'شهري':'سنوي'}`;el.selectedPlanPrice.textContent=`${p.amount} ريال${p.amount===10?'ات':''}`;const msg=[`السلام عليكم، أرغب في طلب تفعيل ${p.label}.`,`المدة: ${p.period==='monthly'?'شهرية':'سنوية'} — ${p.amount} ريال.`,`الاسم: ${state.account?.full_name||state.user?.email||''}`,`المدرسة: ${state.account?.school_name||'غير محددة'}`,`البريد: ${state.user?.email||''}`].join('\n');el.whatsappActivationLink.href=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;el.sendActivationRequestButton.disabled=!el.whatsappConfirmed.checked}
+function updatePlan(){
+ const p=selectedPlan();const eligibility=planEligibility(p.product,p.period);
+ el.selectedPlanName.textContent=`${p.label} — ${p.period==='monthly'?'شهري':'سنوي'}`;
+ el.selectedPlanPrice.textContent=`${p.amount} ريال${p.amount===10?'ات':''}`;
+ const msg=[`السلام عليكم، أرغب في طلب تفعيل ${p.label}.`,`المدة: ${p.period==='monthly'?'شهرية':'سنوية'} — ${p.amount} ريال.`,`نوع الطلب: ${eligibility.kind==='period_upgrade'?'ترقية من شهري إلى سنوي':eligibility.kind==='bundle_upgrade'?'ترقية إلى الباقة الشاملة':'اشتراك جديد'}`,`الاسم: ${state.account?.full_name||state.user?.email||''}`,`المدرسة: ${state.account?.school_name||'غير محددة'}`,`البريد: ${state.user?.email||''}`].join('\n');
+ el.whatsappActivationLink.href=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+ showStatus(el.subscriptionStatus,eligibility.message,!eligibility.allowed);
+ el.sendActivationRequestButton.textContent=eligibility.kind==='period_upgrade'?'إرسال طلب الترقية السنوية':eligibility.kind==='bundle_upgrade'?'إرسال طلب الباقة الشاملة':'إرسال طلب التفعيل';
+ el.sendActivationRequestButton.disabled=!eligibility.allowed||!el.whatsappConfirmed.checked;
+ return eligibility;
+}
 function showSubscription(product){if(product)$all('input[name="productCode"]').forEach(x=>x.checked=x.value===product);el.whatsappConfirmed.checked=false;hideStatus(el.subscriptionStatus);updatePlan();openModal('subscriptionModal')}
-async function requestActivation(){const p=selectedPlan();if(!el.whatsappConfirmed.checked)return;el.sendActivationRequestButton.disabled=true;try{const note=`طلب من البوابة الموحدة — ${p.label} — ${p.period==='monthly'?'شهري':'سنوي'} — تم التواصل عبر واتساب على 00966582712620، والتفعيل مشروط باستكمال التواصل.`;const{error}=await db.rpc('premium_request_package_subscription',{p_product_code:p.product,p_billing_period:p.period,p_user_note:note});if(error)throw error;showStatus(el.subscriptionStatus,'تم إرسال طلب التفعيل إلى مدير النظام. لن يتم التفعيل إلا بعد مراجعة التواصل عبر واتساب.');toast('تم إرسال طلب التفعيل')}catch(e){showStatus(el.subscriptionStatus,e.message||'تعذر إرسال الطلب.',true)}finally{updatePlan()}}
-async function loadAdmin(){if(!isAdmin())return;showStatus(el.adminStatus,'جارٍ تحميل البيانات...');const[rr,ur,er]=await Promise.all([db.from('premium_subscription_requests').select('id,user_id,product_code,amount_sar,billing_period,status,user_note,requested_at').eq('status','pending').order('requested_at',{ascending:true}),db.from('premium_accounts').select('user_id,full_name,email,school_name,is_system_admin,is_active,created_at').order('created_at',{ascending:false}),db.from('premium_entitlements').select('user_id,product_code,billing_period,expires_at,is_active').order('expires_at',{ascending:false})]);const error=rr.error||ur.error||er.error;if(error)return showStatus(el.adminStatus,error.message,true);state.adminRequests=rr.data||[];state.adminUsers=ur.data||[];state.adminEntitlements=er.data||[];hideStatus(el.adminStatus);renderAdmin()}
-function renderAdmin(){const userMap=Object.fromEntries(state.adminUsers.map(u=>[u.user_id,u]));el.adminRequestsList.innerHTML=state.adminRequests.length?state.adminRequests.map(r=>{const u=userMap[r.user_id]||{};return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(LABELS[r.product_code]||r.product_code)}</h4><p>${escapeHtml(u.school_name||u.full_name||'مستخدم')} — ${escapeHtml(u.email||'')}</p></div><span>${r.billing_period==='monthly'?'شهري':'سنوي'} · ${Number(r.amount_sar).toFixed(0)} ريال</span></div><p>${escapeHtml(r.user_note||'')}</p><div class="actions"><button class="primary-button" data-approve="${r.id}">تفعيل الباقة</button><button class="danger-button" data-reject="${r.id}">رفض</button></div></article>`}).join(''):'<div class="status-box">لا توجد طلبات معلقة.</div>';
+async function requestActivation(){const p=selectedPlan();const eligibility=planEligibility(p.product,p.period);if(!eligibility.allowed)return showStatus(el.subscriptionStatus,eligibility.message,true);if(!el.whatsappConfirmed.checked)return;el.sendActivationRequestButton.disabled=true;try{const note=`طلب من البوابة الموحدة — ${p.label} — ${p.period==='monthly'?'شهري':'سنوي'} — ${eligibility.kind==='period_upgrade'?'ترقية من شهري إلى سنوي':eligibility.kind==='bundle_upgrade'?'ترقية إلى الباقة الشاملة مع حفظ المدة المتبقية':'اشتراك جديد'} — تم التواصل عبر واتساب على 00966582712620.`;const{error}=await db.rpc('premium_request_package_subscription',{p_product_code:p.product,p_billing_period:p.period,p_user_note:note});if(error)throw error;showStatus(el.subscriptionStatus,eligibility.kind==='period_upgrade'?'تم إرسال طلب الترقية السنوية. ستُضاف المدة الحالية المتبقية تلقائيًا عند التفعيل.':eligibility.kind==='bundle_upgrade'?'تم إرسال طلب الباقة الشاملة. ستُحفظ مدة باقتك الحالية وتعود بعد انتهاء الشاملة.':'تم إرسال طلب التفعيل إلى مدير النظام.');toast('تم إرسال الطلب')}catch(e){showStatus(el.subscriptionStatus,subscriptionErrorMessage(e),true)}finally{const latest=planEligibility(p.product,p.period);el.sendActivationRequestButton.disabled=!latest.allowed||!el.whatsappConfirmed.checked}}
+async function loadAdmin(){if(!isAdmin())return;showStatus(el.adminStatus,'جارٍ تحميل البيانات...');const[rr,ur,er]=await Promise.all([db.from('premium_subscription_requests').select('id,user_id,product_code,amount_sar,billing_period,status,user_note,requested_at,request_kind,upgrade_context').eq('status','pending').order('requested_at',{ascending:true}),db.from('premium_accounts').select('user_id,full_name,email,school_name,is_system_admin,is_active,created_at').order('created_at',{ascending:false}),db.from('premium_entitlements').select('user_id,product_code,billing_period,expires_at,is_active').order('expires_at',{ascending:false})]);const error=rr.error||ur.error||er.error;if(error)return showStatus(el.adminStatus,error.message,true);state.adminRequests=rr.data||[];state.adminUsers=ur.data||[];state.adminEntitlements=er.data||[];hideStatus(el.adminStatus);renderAdmin()}
+function adminRequestDescription(r){
+ if(r.request_kind==='upgrade_period')return 'ترقية من الخطة الشهرية إلى السنوية مع إضافة المدة المتبقية.';
+ if(r.request_kind==='upgrade_bundle'){
+   const items=r.upgrade_context?.source_packages||[];
+   const names=items.map(x=>LABELS[x.product_code]||x.product_code).join('، ');
+   return `ترقية إلى الباقة الشاملة مع حفظ المدة المتبقية${names?` في: ${names}`:''}.`;
+ }
+ return 'اشتراك جديد.';
+}
+function renderAdmin(){const userMap=Object.fromEntries(state.adminUsers.map(u=>[u.user_id,u]));el.adminRequestsList.innerHTML=state.adminRequests.length?state.adminRequests.map(r=>{const u=userMap[r.user_id]||{};return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(LABELS[r.product_code]||r.product_code)}</h4><p>${escapeHtml(u.school_name||u.full_name||'مستخدم')} — ${escapeHtml(u.email||'')}</p></div><span>${r.billing_period==='monthly'?'شهري':'سنوي'} · ${Number(r.amount_sar).toFixed(0)} ريال</span></div><p><strong>${escapeHtml(adminRequestDescription(r))}</strong></p><p>${escapeHtml(r.user_note||'')}</p><div class="actions"><button class="primary-button" data-approve="${r.id}">تفعيل الباقة</button><button class="danger-button" data-reject="${r.id}">رفض</button></div></article>`}).join(''):'<div class="status-box">لا توجد طلبات معلقة.</div>';
  const now=Date.now();el.adminUsersList.innerHTML=state.adminUsers.map(u=>{const active=state.adminEntitlements.filter(e=>e.user_id===u.user_id&&e.is_active!==false&&new Date(e.expires_at).getTime()>now);const packages=u.is_system_admin?['مدير النظام — جميع الباقات']:active.length?active.map(e=>`${LABELS[e.product_code]||e.product_code} حتى ${formatDate(e.expires_at)}`):['لا توجد باقة نشطة'];const self=u.user_id===state.user.id;return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(u.school_name||u.full_name||'مستخدم')}</h4><p>${escapeHtml(u.email||'')}</p></div><span>${u.is_system_admin?'مدير':'مستخدم'}</span></div><p>${packages.map(escapeHtml).join('<br>')}</p><div class="actions">${u.is_system_admin?`<button class="danger-button" data-admin-role="false" data-user-id="${u.user_id}" ${self?'disabled':''}>إلغاء صلاحية المدير</button>`:`<button class="secondary-button" data-admin-role="true" data-user-id="${u.user_id}">تعيين مدير</button>`}</div></article>`}).join('');
  $all('[data-approve]').forEach(b=>b.onclick=()=>approve(b.dataset.approve));$all('[data-reject]').forEach(b=>b.onclick=()=>rejectReq(b.dataset.reject));$all('[data-admin-role]').forEach(b=>b.onclick=()=>setAdmin(b.dataset.userId,b.dataset.adminRole==='true'))}
-async function approve(id){const{error}=await db.rpc('premium_admin_activate_package_request',{p_request_id:id,p_admin_note:'تم التفعيل من البوابة الموحدة'});if(error)return showStatus(el.adminStatus,error.message,true);toast('تم تفعيل الباقة');await loadAdmin();await loadAccount();renderIdentity()}
+async function approve(id){const{error}=await db.rpc('premium_admin_activate_package_request',{p_request_id:id,p_admin_note:'تم التفعيل من البوابة الموحدة'});if(error)return showStatus(el.adminStatus,subscriptionErrorMessage(error),true);toast('تم تفعيل الباقة');await loadAdmin();await loadAccount();renderIdentity()}
 async function rejectReq(id){const{error}=await db.rpc('premium_admin_reject_request',{p_request_id:id,p_admin_note:'تم رفض الطلب من البوابة الموحدة'});if(error)return showStatus(el.adminStatus,error.message,true);toast('تم رفض الطلب');await loadAdmin()}
 async function setAdmin(userId,makeAdmin){if(!confirm(makeAdmin?'تعيين هذا الحساب مديرًا للنظام؟':'إلغاء صلاحية المدير؟'))return;const{error}=await db.rpc('premium_admin_set_role',{p_user_id:userId,p_is_admin:makeAdmin});if(error)return showStatus(el.adminStatus,error.message,true);toast(makeAdmin?'تم تعيين مدير':'تم إلغاء صلاحية المدير');await loadAdmin()}
 function bind(){el.signInButton.onclick=signIn;el.signUpButton.onclick=signUp;el.authPassword.addEventListener('keydown',e=>{if(e.key==='Enter')signIn()});el.signOutButton.onclick=signOut;el.openProfileButton.onclick=()=>openModal('profileModal');el.openSubscriptionButton.onclick=()=>showSubscription();el.openAdminButton.onclick=async()=>{openModal('adminModal');await loadAdmin()};el.schoolLogoInput.onchange=async()=>{try{state.pendingLogo=await imageToDataUrl(el.schoolLogoInput.files?.[0]);renderIdentity()}catch(e){showStatus(el.profileStatus,e.message,true)}};el.saveSchoolProfileButton.onclick=saveProfile;$all('[data-close-modal]').forEach(b=>b.onclick=()=>closeModal(b.dataset.closeModal));$all('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModal(m.id)});$all('input[name="productCode"],input[name="billingPeriod"]').forEach(x=>x.onchange=updatePlan);el.whatsappConfirmed.onchange=updatePlan;el.sendActivationRequestButton.onclick=requestActivation;$all('[data-quick-plan]').forEach(b=>b.onclick=()=>showSubscription(b.dataset.quickPlan));$all('[data-admin-tab]').forEach(b=>b.onclick=()=>{$all('[data-admin-tab]').forEach(x=>x.classList.toggle('active',x===b));el.adminRequestsPanel.hidden=b.dataset.adminTab!=='requests';el.adminUsersPanel.hidden=b.dataset.adminTab!=='users'});document.addEventListener('keydown',e=>{if(e.key==='Escape')$all('.modal:not([hidden])').forEach(m=>closeModal(m.id))})}
