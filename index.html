@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme-color" content="#0b628f">
+  <meta name="description" content="منصة عامة لتحليل نتائج الطلاب من ملفات Excel وإصدار تقارير تعليمية احترافية للمدارس في المملكة العربية السعودية.">
+  <title>منصة تحليل النتائج التعليمية</title>
+  <link rel="icon" type="image/png" href="assets/expressive-education-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <section id="loginPage" class="login-page">
+    <div class="login-backdrop" aria-hidden="true"></div>
+    <div class="login-shell">
+      <div class="login-brand">
+        <div class="login-logos">
+          <div class="login-logo-box"><img src="assets/expressive-education-logo.png" alt="رمز التحليل التعليمي"></div>
+          <div class="login-logo-box vision"><img src="assets/expressive-insight-logo.png" alt="رمز التميز والإنجاز"></div>
+        </div>
+        <span class="login-kicker">منصة رقمية للمدارس</span>
+        <h1>تحليل النتائج التعليمية</h1>
+        <p>حوّل ملفات Excel إلى مؤشرات واضحة وتقارير احترافية، مع تجربة مجانية واشتراك Premium شهري بقيمة 10 ريالات أو سنوي بقيمة 50 ريالًا.</p>
+        <div class="login-benefits"><span>تحليل الصفوف والفصول</span><span>ضعاف المواد</span><span>تقارير Word وPDF</span><span>أرشفة سحابية</span></div>
+      </div>
+      <div class="login-card">
+        <div class="login-card-head"><span>دخول المنصة</span><h2>سجّل الدخول أو أنشئ حسابًا</h2><p>الحساب التجريبي يتيح التحليل والعرض. الحفظ والطباعة والتصدير للمشتركين Premium.</p></div>
+        <div class="auth-grid login-auth-grid">
+          <label><span>البريد الإلكتروني</span><input id="authEmail" type="email" autocomplete="email" placeholder="name@school.edu.sa"></label>
+          <label><span>كلمة المرور</span><input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="6 أحرف على الأقل"></label>
+          <label class="full-width"><span>الاسم الكامل — عند إنشاء حساب جديد</span><input id="authFullName" type="text" autocomplete="name" placeholder="اسم المستخدم"></label>
+          <div class="actions full-width auth-actions">
+            <button id="signInButton" class="primary-button" type="button">تسجيل الدخول</button>
+            <button id="signUpButton" class="secondary-button" type="button">إنشاء حساب تجريبي</button>
+          </div>
+        </div>
+        <div class="price-strip"><strong>Premium</strong><span>10 ريالات / شهر أو 50 ريالًا / سنة</span><small>اختر الخطة المناسبة — تواصل عبر واتساب للحصول على بيانات الاشتراك</small></div>
+        <div id="loginStatus" class="status-box" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="appShell" hidden>
+
+  <div class="top-ribbon" aria-hidden="true"></div>
+
+  <header class="app-header generic-header">
+    <div class="header-orb orb-one" aria-hidden="true"></div><div class="header-orb orb-two" aria-hidden="true"></div><div class="header-grid" aria-hidden="true"></div>
+    <div class="header-shell">
+      <div class="hero-copy">
+        <div class="hero-eyebrow"><span class="eyebrow-dot"></span> منصة رقمية ذكية لتحليل النتائج</div>
+        <h1>منصة التحليل الذكي<br><span>للنتائج التعليمية</span></h1>
+        <p>منصة عامة للمدارس لتحليل نتائج الطلاب، إعداد التقارير، ومتابعة مؤشرات التحصيل من الصف الأول الابتدائي حتى الثالث الثانوي.</p>
+        <div class="hero-features"><span><b>✓</b> تحليل تجريبي مجاني</span><span><b>✓</b> اشتراك شهري أو سنوي</span><span><b>✓</b> أرشفة سحابية آمنة</span></div>
+      </div>
+      <div class="brand-stage">
+        <div class="brand-stage-glow" aria-hidden="true"></div>
+        <div class="generic-brand-grid">
+          <div class="logo-card"><img src="assets/expressive-education-logo.png" alt="رمز التحليل التعليمي"></div>
+          <div id="schoolIdentityCard" class="school-profile-brand">
+            <img id="headerSchoolLogo" src="assets/expressive-education-logo.png" alt="شعار المدرسة">
+            <div><span>المدرسة الحالية</span><strong id="headerSchoolName">اسم المدرسة</strong></div>
+          </div>
+          <div class="guidance-card"><img src="assets/expressive-insight-logo.png" alt="رمز التميز والإنجاز"></div>
+        </div>
+      </div>
+    </div><div class="header-wave" aria-hidden="true"></div>
+  </header>
+
+  <main class="layout">
+    <section class="panel mode-panel" aria-labelledby="modeHeading">
+      <div class="panel-accent" aria-hidden="true"></div>
+      <div class="section-title premium-title">
+        <span class="step">01</span>
+        <div>
+          <span class="section-kicker">ابدأ التحليل</span>
+          <h2 id="modeHeading">اختر نوع التقرير المطلوب</h2>
+          <p>يدعم التحليل جميع الصفوف من الأول الابتدائي حتى الثالث الثانوي، مع قراءة بنية الملفات وإظهار المؤشرات المناسبة لها.</p>
+        </div>
+      </div>
+
+      <div class="mode-grid" role="radiogroup" aria-label="نوع تحليل النتيجة">
+        <button class="mode-card past-card" type="button" data-mode="past" role="radio" aria-checked="false">
+          <span class="mode-ribbon">مقارنة تاريخية</span>
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img"><path d="M24 7a17 17 0 1 1-15.6 10.2" class="icon-line"/><path d="M8 8v10h10" class="icon-line"/><path d="M24 15v10l7 4" class="icon-line"/></svg>
+          </span>
+          <span class="mode-copy">
+            <strong>تحليل نتيجة العام الماضي</strong>
+            <small>قراءة النتائج النهائية على مستوى الصفوف، مع رصد ضعاف المواد في اختبار نهاية الفصل عند توافر الدرجات التفصيلية.</small>
+          </span>
+          <span class="mode-check">✓</span>
+        </button>
+
+        <button class="mode-card semester-card" type="button" data-mode="semester" role="radio" aria-checked="false">
+          <span class="mode-ribbon">تحليل شامل</span>
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img"><path d="M8 38V24h7v14H8Zm12 0V14h7v24h-7Zm12 0V8h7v30h-7Z"/><path class="icon-line" d="M6 40h36"/></svg>
+          </span>
+          <span class="mode-copy">
+            <strong>نتيجة الفصل الدراسي</strong>
+            <small>تحليل الصفوف والفصول، وأفضل خمسة طلاب في كل فصل، ورصد ضعاف المواد في اختبار نهاية الفصل.</small>
+          </span>
+          <span class="mode-check">✓</span>
+        </button>
+
+        <button class="mode-card period-card" type="button" data-mode="period" role="radio" aria-checked="false">
+          <span class="mode-ribbon">متابعة سريعة</span>
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img"><path d="M7 25h8l4-10 7 20 5-10h10" class="icon-line"/><path d="M10 8h28a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4Z" class="icon-line soft"/></svg>
+          </span>
+          <span class="mode-copy">
+            <strong>تحليل الفترة</strong>
+            <small>تحليل الفصول وأفضل خمسة طلاب بكل فصل، مع رصد ضعاف الاختبارات القصيرة.</small>
+          </span>
+          <span class="mode-check">✓</span>
+        </button>
+      </div>
+      <p id="modeHint" class="selection-hint">اختر المسار الذي يتوافق مع نوع ملفات النتائج المتاحة.</p>
+    </section>
+
+    <section class="panel account-panel" aria-labelledby="accountHeading">
+      <div class="panel-accent" aria-hidden="true"></div>
+      <div class="section-title premium-title"><span class="step">AC</span><div><span class="section-kicker">الحساب والاشتراك</span><h2 id="accountHeading">إعدادات المدرسة وحالة الاشتراك</h2><p>أضف اسم المدرسة وشعارها ليظهرا في المنصة والتقارير.</p></div></div>
+      <div class="account-dashboard">
+        <div class="account-summary">
+          <div><span>المستخدم</span><strong id="currentUserName"></strong><small id="currentUserEmail"></small></div>
+          <div class="plan-card"><span>الخطة الحالية</span><strong id="currentUserPlan">تجريبي</strong><small id="subscriptionExpiry">التحليل والعرض فقط</small></div>
+        </div>
+        <div class="school-profile-form">
+          <label><span>اسم المدرسة</span><input id="schoolProfileName" type="text" placeholder="اكتب اسم المدرسة"></label>
+          <label class="logo-upload-label"><span>شعار المدرسة</span><input id="schoolLogoInput" type="file" accept="image/png,image/jpeg,image/webp"><small>PNG أو JPG — يفضّل خلفية شفافة</small></label>
+          <div class="school-logo-preview"><img id="schoolLogoPreview" src="assets/expressive-education-logo.png" alt="معاينة شعار المدرسة"></div>
+          <button id="saveSchoolProfileButton" class="secondary-button" type="button">حفظ بيانات المدرسة</button>
+        </div>
+        <div class="subscription-box">
+          <div><span class="premium-pill">Premium</span><h3>10 ريالات شهريًا أو 50 ريالًا سنويًا</h3><p>اختر الخطة المناسبة لفتح الحفظ السحابي، والطباعة PDF، وتصدير Word، والرجوع إلى التقارير من أي جهاز.</p></div>
+          <button id="requestPremiumButton" class="primary-button" type="button">طلب تفعيل Premium</button>
+        </div>
+        <div class="actions inline-actions account-actions">
+          <button id="openArchiveButton" class="primary-button" type="button">التحليلات المحفوظة</button>
+          <button id="openSupportButton" class="secondary-button support-entry-button" type="button">الدعم الفني</button>
+          <button id="openAdminButton" class="secondary-button" type="button" hidden>لوحة الإدارة والدعم</button>
+          <button id="signOutButton" class="secondary-button" type="button">تسجيل الخروج</button>
+        </div>
+      </div>
+      <div id="databaseStatus" class="status-box" hidden></div>
+    </section>
+
+    <section id="archivePanel" class="panel archive-panel" hidden>
+      <div class="section-title premium-title compact">
+        <span class="step">AR</span>
+        <div><span class="section-kicker">الأرشيف</span><h2>التحليلات المحفوظة</h2><p>ابحث وافتح وأعد تصدير التقارير السابقة.</p></div>
+      </div>
+      <div class="archive-toolbar">
+        <input id="archiveSearch" type="search" placeholder="ابحث بالعنوان أو العام أو الصف...">
+        <select id="archiveTypeFilter"><option value="">كل أنواع التحليل</option><option value="past">العام الماضي</option><option value="semester">الفصل الدراسي</option><option value="period">الفترة</option></select>
+        <button id="refreshArchiveButton" class="secondary-button" type="button">تحديث</button>
+      </div>
+      <div id="archiveList" class="archive-list"></div>
+    </section>
+
+    <section id="adminPanel" class="panel admin-panel" hidden>
+      <div class="section-title premium-title compact"><span class="step">AD</span><div><span class="section-kicker">إدارة المنصة</span><h2>الاشتراكات والمديرون والدعم</h2><p>متاح لمديري النظام فقط. يمكنك تفعيل الاشتراكات وتعيين مدير من أي حساب مسجل والرد على رسائل الدعم.</p></div></div>
+      <div class="admin-grid">
+        <div><h3>طلبات Premium المعلقة</h3><div id="subscriptionRequestsList" class="admin-list"></div></div>
+        <div><h3>حسابات المستخدمين وصلاحيات الإدارة</h3><div id="premiumUsersList" class="admin-list"></div></div>
+      </div>
+      <div class="admin-support-section">
+        <div class="admin-support-head"><div><span>مركز الدعم</span><h3>محادثات المستخدمين</h3></div><button id="refreshAdminSupportButton" class="secondary-button" type="button">تحديث المحادثات</button></div>
+        <div class="admin-support-workspace">
+          <div id="adminSupportThreadsList" class="admin-support-threads"><div class="empty-state">لا توجد محادثة محددة.</div></div>
+          <div class="admin-support-conversation">
+            <div class="admin-support-conversation-head">
+              <div><span id="adminSupportThreadMeta">اختر محادثة</span><strong id="adminSupportThreadTitle">الدعم الفني</strong></div>
+              <button id="adminSupportStatusButton" class="secondary-button compact-button" type="button" hidden>إغلاق المحادثة</button>
+            </div>
+            <div id="adminSupportMessages" class="support-messages admin-support-messages"><div class="support-empty">اختر مستخدمًا من القائمة لعرض المحادثة.</div></div>
+            <div class="support-compose admin-support-compose">
+              <textarea id="adminSupportReplyInput" rows="2" maxlength="2000" placeholder="اكتب رد الدعم..." disabled></textarea>
+              <button id="adminSupportReplyButton" class="primary-button" type="button" disabled>إرسال الرد</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="setupPanel" class="panel setup-panel" hidden>
+      <div class="panel-watermark" aria-hidden="true"><img src="assets/expressive-education-logo.png" alt=""></div>
+      <div class="selected-mode-bar">
+        <div>
+          <span>المسار النشط</span>
+          <strong id="selectedModeName"></strong>
+        </div>
+        <span class="live-indicator"><i></i> جاهز لاستقبال الملفات</span>
+      </div>
+
+      <div class="section-title premium-title">
+        <span class="step">02</span>
+        <div>
+          <span class="section-kicker">مصدر البيانات</span>
+          <h2>ارفع ملفات النتائج</h2>
+          <p id="filesHelp">اختر ملفات النتائج. في تحليل الفترة تكفي الكشوف التفصيلية؛ سيحسب التطبيق المعدل تلقائيًا من درجات المواد، ويمكن أيضًا دمجها مع ملف معدلات إن وُجد.</p>
+        </div>
+      </div>
+
+      <label class="drop-zone" id="dropZone" for="fileInput">
+        <input id="fileInput" type="file" accept=".xlsx" multiple hidden>
+        <span class="upload-visual" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M32 43V15m0 0L21 26m11-11 11 11"/><path d="M14 39v8a6 6 0 0 0 6 6h24a6 6 0 0 0 6-6v-8"/></svg>
+        </span>
+        <strong>اسحب ملفات Excel هنا</strong>
+        <span class="drop-action">أو اضغط لاختيار الملفات من جهازك</span>
+        <small>الصيغة المدعومة XLSX · تتم المعالجة محليًا ولا تُرفع بيانات الطلاب إلى أي خادم</small>
+      </label>
+      <div id="fileList" class="file-list empty-state">لم يتم اختيار ملفات.</div>
+
+      <div class="section-title premium-title compact">
+        <span class="step">03</span>
+        <div>
+          <span class="section-kicker">هوية التقرير</span>
+          <h2>بيانات التقرير وإعداداته</h2>
+          <p>يمكن ترك اسم المدرسة والعام الدراسي فارغين لاستخراجهما تلقائيًا من الملفات.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>عنوان التقرير</span>
+          <input id="reportTitle" type="text">
+        </label>
+        <label>
+          <span>الفترة</span>
+          <input id="period" type="text">
+        </label>
+        <label>
+          <span>اسم المدرسة</span>
+          <input id="schoolName" type="text" placeholder="يُستخرج تلقائيًا">
+        </label>
+        <label>
+          <span>العام الدراسي</span>
+          <input id="academicYear" type="text" placeholder="مثال: 1447هـ أو 1447/1448">
+        </label>
+        <label>
+          <span>حد الطلاب الأولى بالرعاية</span>
+          <div class="input-suffix">
+            <input id="threshold" type="number" min="0" max="100" step="0.1" value="85">
+            <span>%</span>
+          </div>
+        </label>
+        <label id="shortTestThresholdRow" hidden>
+          <span>نسبة الضعف في الاختبار القصير — أقل من</span>
+          <div class="input-suffix">
+            <input id="shortTestThreshold" type="number" min="0" max="100" step="0.1" value="50">
+            <span>%</span>
+          </div>
+          <small class="field-help">القيمة الافتراضية 50%. يمكن تعديلها وإعادة التحليل فورًا.</small>
+        </label>
+        <label id="finalExamThresholdRow" hidden>
+          <span>نسبة الضعف في اختبار نهاية الفصل — أقل من</span>
+          <div class="input-suffix">
+            <input id="finalExamThreshold" type="number" min="0" max="100" step="0.1" value="50">
+            <span>%</span>
+          </div>
+          <small class="field-help">القيمة الافتراضية أقل من 50%. تُحسب النسبة من درجة الطالب مقارنة بالدرجة القصوى للاختبار.</small>
+        </label>
+        <label class="checkbox-label">
+          <input id="includeNames" type="checkbox" checked>
+          <span>إظهار أسماء الطلاب في تقرير Word</span>
+        </label>
+        <label class="full-width">
+          <span>ملاحظات المدرسة النوعية</span>
+          <textarea id="notes" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="actions main-actions">
+        <button id="analyzeButton" class="primary-button" type="button">
+          <span>تحليل النتائج</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button id="resetButton" class="secondary-button" type="button">إعادة ضبط الملفات</button>
+      </div>
+      <div id="statusBox" class="status-box" hidden></div>
+      <details class="help-box">
+        <summary>إرشادات الاستخدام</summary>
+        <p id="usageHelp">استخدم Google Chrome أو Microsoft Edge، اختر ملفات Excel وحدد الصف الصحيح من الأول الابتدائي حتى الثالث الثانوي لكل ملف، ثم اضغط «تحليل النتائج».</p>
+      </details>
+    </section>
+
+    <section id="resultsPanel" class="panel results-panel" hidden>
+      <div id="printDocument" class="print-document" aria-hidden="true"></div>
+      <div id="printCover" class="print-cover" aria-hidden="true">
+        <div class="print-cover-header">
+          <img src="assets/expressive-education-logo.png" alt="شعار المدرسة">
+          <div>
+            <span>المملكة العربية السعودية</span>
+            <strong>اسم المدرسة</strong>
+            <small>تحليل النتائج التعليمية</small>
+          </div>
+          <img class="print-cover-guidance" src="assets/expressive-insight-logo.png" alt="رمز التميز والإنجاز">
+        </div>
+        <div class="print-cover-accent"><i></i><i></i><i></i></div>
+        <div class="print-cover-content">
+          <span class="print-cover-label">تقرير تحليلي</span>
+          <h1 id="printReportTitle">تحليل النتائج التعليمية</h1>
+          <h2 id="printSchoolName">اسم المدرسة</h2>
+          <p id="printPeriodYear"></p>
+        </div>
+        <div class="print-cover-bottom">منصة تحليل النتائج التعليمية</div>
+      </div>
+
+      <div class="print-page-footer" aria-hidden="true">
+        <span>اسم المدرسة</span>
+        <span>تحليل النتائج التعليمية</span>
+      </div>
+
+      <div class="report-brand">
+        <img class="report-school-logo" src="assets/expressive-education-logo.png" alt="شعار المدرسة">
+        <div>
+          <span>المدرسة</span>
+          <strong>لوحة مؤشرات التحصيل الدراسي</strong>
+        </div>
+        <img class="report-guidance-logo" src="assets/expressive-insight-logo.png" alt="رمز التميز والإنجاز">
+      </div>
+
+      <div class="results-header">
+        <div>
+          <span id="resultModeBadge" class="result-mode-badge"></span>
+          <h2>نتيجة التحليل</h2>
+          <p id="resultsSubtitle"></p>
+        </div>
+        <div class="actions inline-actions">
+          <button id="saveAnalysisButton" class="primary-button save-analysis-button" type="button" hidden>حفظ التحليل</button>
+          <button id="exportButton" class="primary-button" type="button">تصدير Word (.docx)</button>
+          <button id="printButton" class="secondary-button" type="button">طباعة / PDF</button>
+        </div>
+      </div>
+
+      <div id="kpiGrid" class="kpi-grid"></div>
+
+      <nav class="tabs" aria-label="أقسام التحليل">
+        <button class="tab active" data-tab="overview">الملخص العام</button>
+        <button id="classesTabButton" class="tab" data-tab="classes">الفصول</button>
+        <button class="tab" data-tab="top">الأوائل</button>
+        <button class="tab" data-tab="risk">الأولى بالرعاية</button>
+        <button class="tab" data-tab="subjects">المواد</button>
+        <button id="finalExamsTabButton" class="tab" data-tab="finalExams" hidden>ضعاف اختبار نهاية الفصل</button>
+        <button id="shortTestsTabButton" class="tab" data-tab="shortTests" hidden>ضعاف الاختبار القصير</button>
+      </nav>
+
+      <div id="overviewTab" class="tab-content active"></div>
+      <div id="classesTab" class="tab-content"></div>
+      <div id="topTab" class="tab-content"></div>
+      <div id="riskTab" class="tab-content"></div>
+      <div id="subjectsTab" class="tab-content"></div>
+      <div id="finalExamsTab" class="tab-content"></div>
+      <div id="shortTestsTab" class="tab-content"></div>
+    </section>
+  </main>
+
+  <div id="pdfFixedFooter" class="pdf-fixed-footer" aria-hidden="true">
+    <span id="pdfFooterSchool">اسم المدرسة</span>
+    <span id="pdfFooterTitle">تحليل النتائج التعليمية</span>
+    <span>تحليل النتائج التعليمية</span>
+  </div>
+
+  <footer class="app-footer"><div class="footer-shell"><div class="footer-brand"><img src="assets/expressive-education-logo.png" alt="رمز التحليل التعليمي"><div><strong>منصة تحليل النتائج التعليمية</strong><span>حل رقمي عام للمدارس</span></div></div><p>الحساب التجريبي للتحليل والعرض، والاشتراك Premium للحفظ والطباعة والتصدير.</p><img class="footer-guidance" src="assets/expressive-insight-logo.png" alt="رمز التميز والإنجاز"></div></footer>
+  </div>
+
+
+  <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-controls="supportChatPanel" aria-expanded="false">
+    <span class="support-chat-toggle-icon" aria-hidden="true">💬</span>
+    <span>الدعم الفني</span>
+    <b id="supportUnreadBadge" class="support-unread-badge" hidden>0</b>
+  </button>
+  <aside id="supportChatPanel" class="support-chat-panel" hidden aria-label="محادثة الدعم الفني">
+    <div class="support-chat-head">
+      <div><span>مركز المساعدة</span><strong>تواصل مع الدعم</strong></div>
+      <div class="support-chat-head-actions"><button id="refreshSupportChatButton" type="button" title="تحديث">↻</button><button id="closeSupportChatButton" type="button" aria-label="إغلاق">×</button></div>
+    </div>
+    <p class="support-chat-note">اكتب رسالتك وسيظهر رد فريق الدعم داخل هذه المحادثة. لا ترسل كلمات المرور أو بيانات حساسة.</p>
+    <div id="supportChatMessages" class="support-messages"><div class="support-empty">ابدأ محادثة جديدة مع الدعم الفني.</div></div>
+    <div class="support-compose">
+      <textarea id="supportChatInput" rows="2" maxlength="2000" placeholder="اكتب رسالتك هنا..."></textarea>
+      <button id="supportChatSendButton" class="primary-button" type="button">إرسال</button>
+    </div>
+    <div id="supportChatStatus" class="support-chat-status" hidden></div>
+  </aside>
+
+  <div id="paymentModal" class="payment-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+    <div class="payment-modal-backdrop" data-close-payment-modal></div>
+    <section class="payment-modal-card">
+      <button id="closePaymentModalButton" class="payment-modal-close" type="button" aria-label="إغلاق">×</button>
+      <div class="payment-modal-head">
+        <span class="payment-badge">Premium</span>
+        <h2 id="paymentModalTitle">اختر خطة الاشتراك</h2>
+        <p id="paymentModalDescription">اختر اشتراكًا شهريًا أو سنويًا، ثم تواصل عبر واتساب للحصول على بيانات الاشتراك وأرسل طلب التفعيل.</p>
+      </div>
+      <div class="subscription-plan-selector" role="radiogroup" aria-label="مدة اشتراك Premium">
+        <label class="subscription-plan-option">
+          <input type="radio" name="premiumBillingPeriod" value="monthly">
+          <span class="plan-choice-title">اشتراك شهري</span>
+          <strong>10 ريالات</strong>
+          <small>صلاحية لمدة شهر واحد</small>
+        </label>
+        <label class="subscription-plan-option selected">
+          <input type="radio" name="premiumBillingPeriod" value="yearly" checked>
+          <span class="plan-choice-badge">الأوفر</span>
+          <span class="plan-choice-title">اشتراك سنوي</span>
+          <strong>50 ريالًا</strong>
+          <small>صلاحية لمدة 12 شهرًا</small>
+        </label>
+      </div>
+      <section class="whatsapp-activation-card" aria-label="التواصل عبر واتساب للتفعيل">
+        <div class="whatsapp-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img"><path d="M32 7C18.2 7 7 17.8 7 31.1c0 5 1.6 9.7 4.5 13.6L8 57l12.8-3.4c3.4 1.8 7.2 2.7 11.2 2.7 13.8 0 25-10.8 25-24.1S45.8 7 32 7Z" fill="currentColor" opacity=".18"/><path d="M22.7 20.2c-.6-1.4-1.2-1.5-2.1-1.5h-1.8c-.8 0-2 .4-3 1.7-1 1.2-3.8 3.7-3.8 9s3.9 10.5 4.4 11.2c.5.7 7.6 12 18.7 16.3 9.2 3.6 11.1 2.9 13.1 2.7 2-.2 6.5-2.7 7.4-5.2.9-2.6.9-4.8.6-5.2-.3-.5-1-.7-2.1-1.2-1.1-.6-6.5-3.2-7.5-3.6-1-.4-1.8-.6-2.5.6-.7 1.1-2.9 3.6-3.5 4.4-.6.7-1.3.8-2.4.3-1.1-.6-4.6-1.7-8.8-5.4-3.2-2.8-5.4-6.3-6.1-7.4-.6-1.1-.1-1.7.5-2.3.5-.5 1.1-1.3 1.7-1.9.6-.6.7-1.1 1.1-1.8.4-.7.2-1.4-.1-2-.3-.6-2.5-6.1-3.8-8.3Z" fill="currentColor" transform="scale(.72) translate(12 8)"/></svg>
+        </div>
+        <div class="whatsapp-activation-copy">
+          <span class="whatsapp-kicker">خطوة إلزامية قبل التفعيل</span>
+          <h3>تواصل معنا عبر واتساب للحصول على بيانات الاشتراك</h3>
+          <p>أرسل رسالة واتساب أولًا للحصول على بيانات السداد واستكمال إجراءات التفعيل، ثم ارجع إلى المنصة واضغط <strong>إرسال طلب التفعيل</strong>.</p>
+          <div class="whatsapp-number"><span>رقم واتساب</span><strong dir="ltr">00966 58 271 2620</strong></div>
+        </div>
+      </section>
+      <a id="whatsappContactButton" class="whatsapp-contact-button" href="https://wa.me/966582712620" target="_blank" rel="noopener noreferrer">
+        <span aria-hidden="true">💬</span>
+        <span>مراسلة واتساب لبيانات الاشتراك</span>
+      </a>
+      <label class="payment-confirm-row"><input id="paymentConfirmCheckbox" type="checkbox"><span id="paymentConfirmText">أؤكد أنني تواصلت عبر واتساب بخصوص الاشتراك السنوي، وأرغب في إرسال طلب التفعيل.</span></label>
+      <div class="payment-actions">
+        <button id="confirmPremiumRequestButton" class="primary-button" type="button" disabled>إرسال طلب التفعيل</button>
+        <button class="secondary-button" type="button" data-close-payment-modal>إلغاء</button>
+      </div>
+      <p id="paymentSecurityNote" class="payment-security-note"><strong>تنبيه:</strong> لن يتم تفعيل الاشتراك إلا بعد التواصل عبر واتساب واستكمال إجراءات الاشتراك.</p>
+    </section>
+  </div>
+  <div id="securityWatermark" class="security-watermark" aria-hidden="true"></div>
+  <div id="screenShield" class="screen-shield" hidden aria-hidden="true"><div><img src="assets/expressive-education-logo.png" alt=""><strong>المحتوى محمي</strong><span>تم إخفاء الشاشة مؤقتًا لحماية بيانات الطلاب.</span></div></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
