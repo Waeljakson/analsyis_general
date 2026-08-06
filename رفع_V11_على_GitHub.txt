@@ -1,0 +1,11 @@
+نسخة V11 تضيف تقارير الطلاب إلى منصة السجلات.
+
+ارفع جميع الملفات والمجلدات الموجودة داخل هذا الملف المضغوط إلى جذر المستودع.
+تأكد داخل مجلد records من وجود:
+- app-v11.js
+- styles-v11.css
+- index.html
+
+بعد اكتمال GitHub Pages افتح:
+https://waeljakson.github.io/analsyis_general/version.json
+ويجب أن يظهر الإصدار 11.0.0

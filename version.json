@@ -1,6 +1,9 @@
 {
-  "version": "10.1.0",
-  "release": "V10 varied interactive presentations",
-  "cache_tag": "v10.1.0-20260806",
-  "published_files_must_be_in_repository_root": true
+  "version": "11.0.0",
+  "release": "Student unified reports for guidance records",
+  "records_assets": {
+    "app": "records/app-v11.js",
+    "styles": "records/styles-v11.css"
+  },
+  "pages_source": "main:/"
 }

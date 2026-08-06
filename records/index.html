@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta name="app-version" content="10.1.0">
+  <meta name="app-version" content="11.0.0">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v10.1.0-20260806">
+  <link rel="stylesheet" href="styles-v11.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .unified-platform-bar{position:sticky;top:0;z-index:10020;background:rgba(255,255,255,.96);border-bottom:1px solid rgba(8,72,102,.12);box-shadow:0 10px 32px rgba(7,63,93,.10);backdrop-filter:blur(18px);font-family:Cairo,Tahoma,sans-serif}
@@ -125,6 +125,7 @@
     <nav class="main-nav" aria-label="التنقل الرئيسي">
       <button class="nav-button active" data-view="dashboard" type="button"><span>⌂</span> الرئيسية</button>
       <button class="nav-button" data-view="archive" type="button"><span>▤</span> الأرشيف</button>
+      <button class="nav-button" data-view="studentReports" type="button"><span>◉</span> تقارير الطلاب</button>
       <button class="nav-button" data-view="settings" type="button"><span>⚙</span> الإعدادات والاشتراك</button>
       <button id="adminNavButton" class="nav-button" data-view="admin" type="button" hidden><span>★</span> الإدارة</button>
       <button id="signOutButton" class="nav-button signout" type="button"><span>↪</span> تسجيل الخروج</button>
@@ -214,6 +215,130 @@
         <div id="archiveList" class="archive-list"></div>
       </section>
 
+
+      <section id="studentReportsView" class="app-view">
+        <div class="view-heading no-print">
+          <div>
+            <span class="section-kicker">ملف الطالب الموحد</span>
+            <h2>تقرير شامل عن الطالب</h2>
+            <p>يجمع كل ما سُجّل على الطالب من مواقف، إرشاد فردي، غياب، تأخر، دراسة حالة، تواصل مع ولي الأمر، ومتابعات أخرى في تقرير واحد مرتب زمنيًا.</p>
+          </div>
+          <div class="report-heading-actions">
+            <button id="refreshStudentReportsButton" class="secondary-button" type="button">تحديث البيانات</button>
+            <button id="printStudentReportButton" class="primary-button" type="button" disabled>طباعة / حفظ PDF</button>
+          </div>
+        </div>
+
+        <section class="student-report-builder no-print">
+          <div class="report-builder-head">
+            <div>
+              <span>إنشاء التقرير</span>
+              <h3>اختر الطالب وحدد نطاق التقرير</h3>
+            </div>
+            <div class="available-students"><strong id="studentReportAvailableCount">0</strong><small>طالب مسجل</small></div>
+          </div>
+
+          <div class="report-filter-grid">
+            <label class="span-2">
+              <span>اسم الطالب</span>
+              <input id="studentReportName" type="text" list="studentNamesList" placeholder="اكتب أو اختر اسم الطالب" autocomplete="off">
+              <datalist id="studentNamesList"></datalist>
+            </label>
+            <label>
+              <span>الصف / الفصل</span>
+              <select id="studentReportClass"><option value="">كل الفصول</option></select>
+            </label>
+            <label>
+              <span>نوع السجل</span>
+              <select id="studentReportType"><option value="">كل أنواع السجلات</option></select>
+            </label>
+            <label>
+              <span>من تاريخ</span>
+              <input id="studentReportFrom" type="date">
+            </label>
+            <label>
+              <span>إلى تاريخ</span>
+              <input id="studentReportTo" type="date">
+            </label>
+            <label>
+              <span>حالة السجل</span>
+              <select id="studentReportStatusFilter">
+                <option value="">كل الحالات</option>
+                <option value="draft">مسودة</option>
+                <option value="completed">مكتمل</option>
+                <option value="archived">مؤرشف</option>
+              </select>
+            </label>
+            <label class="report-check">
+              <input id="studentReportIncludeConfidential" type="checkbox" checked>
+              <span>تضمين السجلات السرية ودراسات الحالة</span>
+            </label>
+          </div>
+
+          <div class="report-builder-actions">
+            <button id="generateStudentReportButton" class="primary-button" type="button">إنشاء التقرير الشامل</button>
+            <button id="resetStudentReportButton" class="ghost-button" type="button">مسح الاختيارات</button>
+          </div>
+          <div id="studentReportStatus" class="status-box" hidden></div>
+        </section>
+
+        <article id="studentReportDocument" class="student-report-document" hidden>
+          <header class="student-report-header">
+            <div class="student-report-school">
+              <div class="student-report-logo">
+                <img id="studentReportSchoolLogo" alt="شعار المدرسة" hidden>
+                <div id="studentReportLogoPlaceholder" class="logo-placeholder small" aria-hidden="true">
+                  <svg viewBox="0 0 64 64"><path d="M8 28 32 13l24 15-24 15L8 28Z"/><path d="M18 35v12c7 5 21 5 28 0V35"/><path d="M53 31v16"/></svg>
+                </div>
+              </div>
+              <div><strong id="studentReportSchoolName">اسم المدرسة</strong><span>قسم التوجيه الطلابي</span></div>
+            </div>
+            <div class="student-report-title">
+              <span>تقرير الطالب الموحد</span>
+              <h1 id="studentReportStudentName">اسم الطالب</h1>
+              <p id="studentReportScope">جميع السجلات والمتابعات</p>
+            </div>
+            <div class="student-report-security"><strong>سري</strong><small>للاستخدام التربوي</small></div>
+          </header>
+
+          <section class="student-report-profile">
+            <div><span>الطالب</span><strong id="studentReportProfileName">—</strong></div>
+            <div><span>الصفوف / الفصول</span><strong id="studentReportProfileClasses">—</strong></div>
+            <div><span>الفترة الزمنية</span><strong id="studentReportProfilePeriod">—</strong></div>
+            <div><span>تاريخ إصدار التقرير</span><strong id="studentReportGeneratedAt">—</strong></div>
+          </section>
+
+          <section class="student-report-stats">
+            <article><span>إجمالي السجلات</span><strong id="studentReportTotal">0</strong><small>سجل مرتبط بالطالب</small></article>
+            <article><span>المواقف والمشكلات</span><strong id="studentReportIncidents">0</strong><small>سلوكية أو تعليمية</small></article>
+            <article><span>الإرشاد والمتابعة</span><strong id="studentReportGuidance">0</strong><small>جلسات ومقابلات</small></article>
+            <article><span>الغياب والتأخر</span><strong id="studentReportAttendance">0</strong><small>مواظبة وانضباط</small></article>
+            <article><span>دراسات الحالة</span><strong id="studentReportCases">0</strong><small>سجلات سرية</small></article>
+          </section>
+
+          <section class="student-report-breakdown">
+            <div class="report-section-heading">
+              <div><span>ملخص الأنواع</span><h2>توزيع سجلات الطالب</h2></div>
+            </div>
+            <div id="studentReportTypeBreakdown" class="student-report-type-breakdown"></div>
+          </section>
+
+          <section class="student-report-timeline-section">
+            <div class="report-section-heading">
+              <div><span>التسلسل الزمني</span><h2>جميع السجلات والمتابعات</h2></div>
+              <small>مرتبة من الأحدث إلى الأقدم</small>
+            </div>
+            <div id="studentReportTimeline" class="student-report-timeline"></div>
+          </section>
+
+          <footer class="student-report-footer">
+            <div><span>أعد التقرير</span><strong id="studentReportCounselor">—</strong></div>
+            <div><span>عدد السجلات</span><strong id="studentReportFooterCount">0</strong></div>
+            <div><span>رقم التقرير</span><strong id="studentReportReference">—</strong></div>
+          </footer>
+        </article>
+      </section>
+
       <section id="settingsView" class="app-view">
         <div class="view-heading"><div><span class="section-kicker">الحساب والهوية</span><h2>إعدادات المدرسة والاشتراك</h2><p>الاسم والشعار يظهران تلقائيًا في جميع السجلات والطباعة.</p></div></div>
         <div class="settings-grid">
@@ -288,6 +413,6 @@
   <div id="trialWatermark" class="trial-watermark" aria-hidden="true" hidden></div>
   <div id="screenShield" class="screen-shield" hidden><div><strong>المحتوى محمي في الحساب التجريبي</strong><span>تعود الشاشة عند الرجوع إلى المنصة.</span></div></div>
 
-  <script src="app.js?v10.1.0-20260806"></script>
+  <script src="app-v11.js"></script>
 </body>
 </html>
