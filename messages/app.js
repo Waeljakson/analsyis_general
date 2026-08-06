@@ -1,4 +1,4 @@
-const SUPABASE_URL="https://fpicgtldwfevdvpbxkjf.supabase.co",SUPABASE_KEY="sb_publishable_3C7eKHRkzE2T-OLOpfue4g_i3u4R7Ay";const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=s=>document.querySelector(s);let audience='boys',allMessages=[],visible=[],shown=0,favorites=new Set(JSON.parse(localStorage.getItem('message_favorites')||'[]'));
+const SUPABASE_URL="https://fpicgtldwfevdvpbxkjf.supabase.co",SUPABASE_KEY="sb_publishable_3C7eKHRkzE2T-OLOpfue4g_i3u4R7Ay";const db=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;const $=s=>document.querySelector(s);window.__MESSAGES_APP_LOADED__=true;let storedFavorites=[];try{const raw=JSON.parse(localStorage.getItem('message_favorites')||'[]');storedFavorites=Array.isArray(raw)?raw:[]}catch(_error){localStorage.removeItem('message_favorites')}let audience='boys',allMessages=[],visible=[],shown=0,favorites=new Set(storedFavorites);
 const stages={lower_primary:'الابتدائية الدنيا',upper_primary:'الابتدائية العليا',middle:'المتوسطة',secondary:'الثانوية'};
 const categories={
 'achievement':['التفوق العام','النجاح','تحسن المستوى','التميز في مادة','المشاركة الصفية','الالتزام بالواجبات','القراءة المتميزة','القيادة الطلابية','المبادرة الإيجابية','الانضباط المتميز'],
@@ -57,6 +57,7 @@ function readStoredSession(){
 async function resolveSession(){
   const stored=readStoredSession();
   if(stored)return stored;
+  if(!db?.auth?.getSession)return null;
   const result=await withTimeout(db.auth.getSession(),7000,'session_timeout');
   return result?.data?.session||null;
 }
@@ -99,7 +100,7 @@ async function loadAnnualAccess(session){
   }catch(error){
     console.warn('تعذر تحميل نوع الجمهور، سيتم استخدام الإعداد الافتراضي',error);
   }
-  return {annual:annual===true,account};
+  return {annual:annual===true||annual==='true'||annual?.premium_has_annual_access===true,account};
 }
 
 async function init(){

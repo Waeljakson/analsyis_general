@@ -1,4 +1,31 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b6b83"><title>مراسلات الموجه الطلابي</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><link rel="stylesheet" href="styles.css"></head><body>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b6b83"><title>مراسلات الموجه الطلابي</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window.__SUPABASE_CDN_FAILED__=true"></script><script>
+(function(){
+  var projectRef='fpicgtldwfevdvpbxkjf';
+  var authKey='sb-'+projectRef+'-auth-token';
+  function readSession(){
+    var keys=[authKey];
+    try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('sb-')===0&&k.slice(-11)==='-auth-token'&&keys.indexOf(k)<0)keys.push(k)})}catch(_e){}
+    for(var i=0;i<keys.length;i++){
+      try{
+        var raw=localStorage.getItem(keys[i]);
+        if(!raw)continue;
+        var parsed=JSON.parse(raw);
+        var session=(parsed&&parsed.currentSession)||(parsed&&parsed.session)||parsed;
+        if(session&&session.access_token&&session.user&&session.user.id)return session;
+      }catch(_e){}
+    }
+    return null;
+  }
+  try{
+    var f=localStorage.getItem('message_favorites');
+    if(f){var parsedFavorites=JSON.parse(f);if(!Array.isArray(parsedFavorites))localStorage.removeItem('message_favorites')}
+  }catch(_e){try{localStorage.removeItem('message_favorites')}catch(_x){}}
+  if(!window.supabase||typeof window.supabase.createClient!=='function'){
+    window.supabase={createClient:function(){return{auth:{getSession:async function(){return{data:{session:readSession()}}}}}}};
+  }
+  window.__MESSAGES_READ_SESSION__=readSession;
+})();
+</script><link rel="stylesheet" href="styles.css"></head><body>
 <div id="loading" class="gate"><div class="spinner"></div><h2>جارٍ التحقق من الاشتراك...</h2></div>
 <section id="locked" class="gate" hidden><div class="lock-icon">🔒</div><h1>مكتبة الرسائل متاحة للباقات السنوية فقط</h1><p>هذه الميزة الإضافية تُفتح تلقائيًا لأي مستخدم لديه باقة سنوية سارية، سواء كانت باقة منصة واحدة أو الباقة الشاملة.</p><a href="../index.html?notice=package_locked" class="btn">العودة للبوابة والترقية</a></section>
 <div id="app" hidden><header><div><span class="kicker">منصة الموجه الطلابي</span><h1>مراسلات ولي الأمر</h1><p>رسائل مختصرة وراقية، جاهزة للنسخ والإرسال عبر واتساب.</p></div><div class="header-actions"><span id="audienceBadge" class="badge"></span><a href="../index.html" class="ghost">العودة للبوابة</a></div></header>
@@ -6,4 +33,13 @@
 <section class="filters"><input id="searchInput" placeholder="ابحث عن غياب، تفوق، قدرات، تحصيلي..."><select id="stageFilter"><option value="all">كل المراحل</option><option value="lower_primary">الابتدائية الدنيا</option><option value="upper_primary">الابتدائية العليا</option><option value="middle">المتوسطة</option><option value="secondary">الثانوية</option></select><select id="categoryFilter"><option value="all">كل التصنيفات</option></select><select id="toneFilter"><option value="all">كل الصياغات</option><option value="friendly">ودية</option><option value="formal">رسمية</option></select><button id="favoritesOnly" class="ghost">المفضلة فقط</button></section>
 <section class="personalize"><input id="studentName" placeholder="اسم الطالب/الطالبة"><input id="className" placeholder="الصف والفصل"><input id="schoolName" placeholder="اسم المدرسة"><input id="counselorName" placeholder="اسم الموجه الطلابي"></section>
 <div id="resultsInfo" class="results-info"></div><section id="cards" class="cards"></section><button id="loadMore" class="btn more">عرض المزيد</button></main>
-<div id="toast" class="toast" hidden></div></div><script src="app.js?v=14.1.0"></script></body></html>
+<div id="toast" class="toast" hidden></div></div><script>
+window.__MESSAGES_PAGE_WATCHDOG__=setTimeout(function(){
+  var loading=document.getElementById('loading');
+  var app=document.getElementById('app');
+  var locked=document.getElementById('locked');
+  if(loading&&!loading.hidden&&app&&app.hidden&&locked&&locked.hidden){
+    loading.innerHTML='<h2>تعذر تشغيل فحص الاشتراك</h2><p>لم يبدأ ملف المنصة بصورة صحيحة. حدّث الصفحة تحديثًا إجباريًا ثم أعد المحاولة.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="location.reload()" class="btn" type="button">إعادة المحاولة</button><a href="../index.html" class="btn">العودة إلى البوابة</a></div>';
+  }
+},12000);
+</script><script src="app.js?v=14.2.0"></script></body></html>
