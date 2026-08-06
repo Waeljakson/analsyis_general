@@ -1,15 +1,16 @@
 const SUPABASE_URL="https://fpicgtldwfevdvpbxkjf.supabase.co";
 const SUPABASE_KEY="sb_publishable_3C7eKHRkzE2T-OLOpfue4g_i3u4R7Ay";
 const db=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+window.__UNIFIED_PLATFORM_DB__=db;
 const WHATSAPP_NUMBER="966582712620";
 const LABELS={results_analysis:"باقة تحليل النتائج",guidance_records:"باقة السجلات الرقمية",all_access:"الباقة الشاملة",presentations:"منصة العروض التقديمية",program_ideas:"منصة أفكار البرامج"};
 const PLATFORMS=[
- {code:"results_analysis",title:"تحليل النتائج التعليمية",desc:"تحليل ملفات Excel، مؤشرات التحصيل، ضعاف المواد، تقارير Word وPDF، وأرشفة التحليلات.",icon:"▥",className:"analysis",href:"analysis/index.html",available:true},
- {code:"guidance_records",title:"السجلات الرقمية للموجه الطلابي",desc:"نماذج رقمية للسجلات الإرشادية، دراسة الحالة، الزيارات، المقابلات، المواظبة والأرشفة.",icon:"▤",className:"records",href:"records/index.html",available:true},
- {code:"presentations",title:"العروض التقديمية",desc:"منصة لإعداد وإدارة العروض التقديمية المهنية للموجه الطلابي.",icon:"▰",className:"presentations",href:"#",available:false},
- {code:"program_ideas",title:"أفكار البرامج",desc:"مكتبة أفكار وبرامج توجيهية قابلة للتخصيص والتنفيذ داخل المدرسة.",icon:"✦",className:"ideas",href:"#",available:false}
+ {code:"results_analysis",title:"تحليل النتائج التعليمية",desc:"تحليل ملفات Excel، مؤشرات التحصيل، ضعاف المواد، تقارير Word وPDF، وأرشفة التحليلات.",icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/></svg>`,className:"analysis",href:"analysis/index.html",available:true},
+ {code:"guidance_records",title:"السجلات الرقمية للموجه الطلابي",desc:"نماذج رقمية للسجلات الإرشادية، دراسة الحالة، الزيارات، المقابلات، المواظبة والأرشفة.",icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg>`,className:"records",href:"records/index.html",available:true},
+ {code:"presentations",title:"العروض التقديمية",desc:"مكتبة عروض توجيهية احترافية مصنفة حسب المرحلة ونوع الطلاب، مع عرض داخلي وطلبات تصميم خاصة.",icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M10 8l5 2.5-5 2.5z"/></svg>`,className:"presentations",href:"presentations/index.html",available:true},
+ {code:"program_ideas",title:"أفكار البرامج",desc:"مكتبة أفكار وبرامج توجيهية قابلة للتخصيص والتنفيذ داخل المدرسة.",icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4M8.5 15.5a7 7 0 1 1 7 0c-1 .8-1.5 1.5-1.5 2.5h-4c0-1-.5-1.7-1.5-2.5z"/></svg>`,className:"ideas",href:"#",available:false}
 ];
-const state={user:null,account:null,entitlements:[],pendingLogo:null,adminUsers:[],adminRequests:[],adminEntitlements:[]};
+const state={user:null,account:null,entitlements:[],pendingLogo:null,adminUsers:[],adminRequests:[],adminEntitlements:[],adminCustomRequests:[]};
 const el=Object.fromEntries([...document.querySelectorAll('[id]')].map(x=>[x.id,x]));
 const $all=s=>[...document.querySelectorAll(s)];
 function escapeHtml(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
@@ -71,7 +72,7 @@ function clearPlatformLaunches(){
   }catch(_error){}
 }
 function launchPlatform(code,href){
-  if(!hasAccess(code)&&hasPaidPackage()){showSubscription(code);return}
+  if(!hasAccess(code)){showSubscription(code);return}
   rememberPlatformLaunch(code);
   window.location.href=`${href}${href.includes('?')?'&':'?'}from=portal`;
 }
@@ -85,16 +86,16 @@ function setAuthBusy(b){el.signInButton.disabled=b;el.signUpButton.disabled=b;el
 function initials(){const n=clean(state.account?.school_name||state.account?.full_name||'مدرسة');return n.charAt(0)||'م'}
 async function imageToDataUrl(file){if(!file)return null;if(file.size>2*1024*1024)throw new Error('حجم الشعار يجب ألا يتجاوز 2 ميجابايت.');return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
 async function loadAccount(){
- let{data,error}=await db.from('premium_accounts').select('user_id,full_name,email,school_name,school_logo_data,is_system_admin,is_active').eq('user_id',state.user.id).maybeSingle();
- if(error)throw error;if(!data){await new Promise(r=>setTimeout(r,500));({data,error}=await db.from('premium_accounts').select('user_id,full_name,email,school_name,school_logo_data,is_system_admin,is_active').eq('user_id',state.user.id).single());if(error)throw error}
+ let{data,error}=await db.from('premium_accounts').select('user_id,full_name,email,school_name,school_logo_data,is_system_admin,is_active,presentation_audience_type').eq('user_id',state.user.id).maybeSingle();
+ if(error)throw error;if(!data){await new Promise(r=>setTimeout(r,500));({data,error}=await db.from('premium_accounts').select('user_id,full_name,email,school_name,school_logo_data,is_system_admin,is_active,presentation_audience_type').eq('user_id',state.user.id).single());if(error)throw error}
  state.account=data;
  const{data:ents,error:e}=await db.from('premium_entitlements').select('id,user_id,product_code,billing_period,started_at,expires_at,is_active').eq('user_id',state.user.id).order('expires_at',{ascending:false});if(e)throw e;state.entitlements=ents||[];
 }
 function planSummary(){
  if(isAdmin())return{title:'مدير النظام',details:'صلاحية كاملة لجميع المنصات والباقات.',chips:['جميع المنصات']};
  const active=activeEntitlements();const all=active.find(e=>e.product_code==='all_access');
- if(all){const resumed=active.filter(e=>e.product_code!=='all_access'&&new Date(e.expires_at).getTime()>new Date(all.expires_at).getTime());const resumeText=resumed.length?` — وبعد انتهائها تُستأنف ${resumed.map(e=>LABELS[e.product_code]||e.product_code).join('، ')} حتى ${formatDate(resumed.reduce((m,e)=>new Date(e.expires_at)>new Date(m.expires_at)?e:m).expires_at)}`:'';return{title:'الباقة الشاملة',details:`${all.billing_period==='monthly'?'اشتراك شهري':'اشتراك سنوي'} — سارية حتى ${formatDate(all.expires_at)}${resumeText}`,chips:['تحليل النتائج','السجلات الرقمية','كل المنصات القادمة']};}
- if(!active.length)return{title:'حساب تجريبي',details:'لا توجد باقة مدفوعة نشطة. يمكنك استعراض المنصات المتاحة بصورة تجريبية قبل الاشتراك.',chips:['تجربة محدودة']};
+ if(all){const resumed=active.filter(e=>e.product_code!=='all_access'&&new Date(e.expires_at).getTime()>new Date(all.expires_at).getTime());const resumeText=resumed.length?` — وبعد انتهائها تُستأنف ${resumed.map(e=>LABELS[e.product_code]||e.product_code).join('، ')} حتى ${formatDate(resumed.reduce((m,e)=>new Date(e.expires_at)>new Date(m.expires_at)?e:m).expires_at)}`:'';return{title:'الباقة الشاملة',details:`${all.billing_period==='monthly'?'اشتراك شهري':'اشتراك سنوي'} — سارية حتى ${formatDate(all.expires_at)}${resumeText}`,chips:['تحليل النتائج','السجلات الرقمية','العروض التقديمية','كل المنصات القادمة']};}
+ if(!active.length)return{title:'حساب غير مشترك',details:'لا توجد باقة مدفوعة نشطة. اختر الباقة المطلوبة لإتاحة المنصة.',chips:['لا توجد منصة مفعّلة']};
  const chips=active.map(e=>LABELS[e.product_code]||e.product_code);return{title:chips.join(' + '),details:active.map(e=>`${LABELS[e.product_code]||e.product_code}: حتى ${formatDate(e.expires_at)}`).join(' — '),chips};
 }
 function renderIdentity(){
@@ -103,7 +104,7 @@ function renderIdentity(){
  [ [el.headerSchoolLogo,el.headerLogoPlaceholder],[el.schoolLogoPreview,el.profileLogoPlaceholder] ].forEach(([img,ph])=>{if(logo){img.src=logo;img.hidden=false;ph.hidden=true}else{img.hidden=true;ph.hidden=false;if(ph===el.headerLogoPlaceholder)ph.textContent=initials()}});
  const p=planSummary();el.headerPlanName.textContent=p.title;el.headerPlanExpiry.textContent=p.details;el.currentPackageTitle.textContent=p.title;el.currentPackageDetails.textContent=p.details;el.activePackageChips.innerHTML=p.chips.map(c=>`<span class="package-chip">${escapeHtml(c)}</span>`).join('');
  el.openAdminButton.hidden=!isAdmin();
- el.accessExplanation.textContent=hasPaidPackage()?'تظهر المنصات المشمولة في باقتك فقط بحالة مفعّلة، وباقي المنصات تكون غير نشطة.':'الحساب التجريبي يسمح بتجربة محدودة. بعد الاشتراك ستظل المنصة غير المشمولة مقفلة.';
+ el.accessExplanation.textContent='تظهر المنصات المشمولة في باقتك فقط بحالة مفعّلة، وباقي المنصات تكون غير نشطة حتى طلب الاشتراك.';
  renderPlatforms();
 }
 function platformStatus(p){
@@ -112,11 +113,18 @@ function platformStatus(p){
    const e=activeEntitlements().find(x=>x.product_code==='all_access')||activeEntitlements().find(x=>x.product_code===p.code);
    return{mode:'active',label:'مفعّلة',meta:isAdmin()?'متاحة لمدير النظام':e?`سارية حتى ${formatDate(e.expires_at)}`:'متاحة',button:'دخول المنصة'};
  }
- if(!hasPaidPackage())return{mode:'trial',label:'تجربة محدودة',meta:'الحفظ والطباعة غير متاحين',button:'دخول التجربة'};
- return{mode:'locked',label:'غير مفعّلة',meta:'هذه المنصة غير مشمولة في باقتك',button:'الباقة غير نشطة'};
+ return{mode:'locked',label:'غير مفعّلة',meta:'هذه المنصة غير مشمولة في باقتك الحالية',button:'عرض خيارات الاشتراك'};
 }
 function renderPlatforms(){
- el.platformGrid.innerHTML=PLATFORMS.map(p=>{const s=platformStatus(p);const usable=s.mode==='active'||s.mode==='trial';const action=usable?`<button class="primary-button" type="button" data-launch-platform="${p.code}" data-platform-href="${p.href}">${s.button}</button>`:`<button class="locked-button secondary-button" type="button" ${s.mode==='locked'?`data-request-locked="${p.code}"`:''} ${s.mode==='coming'?'disabled':''}>${s.button}</button>`;return `<article class="platform-card ${p.className} ${s.mode}"><div class="platform-top"><div class="platform-icon">${p.icon}</div><span class="status-badge">${s.label}</span></div><h3>${p.title}</h3><p>${p.desc}</p><div class="platform-meta">${s.meta}</div>${action}</article>`}).join('');
+ const cards=PLATFORMS.map((p,index)=>{const s=platformStatus(p);const usable=s.mode==='active';const action=usable?`<button class="primary-button platform-action-button" type="button" data-launch-platform="${p.code}" data-platform-href="${p.href}"><span>دخول المنصة</span><b>←</b></button>`:`<button class="locked-button secondary-button platform-action-button" type="button" ${s.mode==='locked'?`data-request-locked="${p.code}"`:''} ${s.mode==='coming'?'disabled':''}><span>${s.button}</span><b>${s.mode==='coming'?'…':'+'}</b></button>`;return{...p,status:s,html:`<article class="platform-card ${p.className} ${s.mode}"><div class="platform-card-accent"></div><div class="platform-top"><div class="platform-icon">${p.icon}</div><span class="status-badge">${s.label}</span></div><div class="platform-card-body"><span class="platform-number">0${index+1}</span><h3>${p.title}</h3><p>${p.desc}</p></div><div class="platform-card-footer"><div class="platform-meta">${s.meta}</div>${action}</div></article>`}});
+ const activeCards=cards.filter(x=>x.status.mode==='active');
+ const inactiveCards=cards.filter(x=>x.status.mode!=='active');
+ if(el.activePlatformGrid)el.activePlatformGrid.innerHTML=activeCards.length?activeCards.map(x=>x.html).join(''):`<div class="empty-platform-state"><strong>لا توجد منصة مفعّلة حاليًا</strong><span>اختر باقة من قسم الاشتراكات لبدء الاستخدام.</span></div>`;
+ if(el.lockedPlatformGrid)el.lockedPlatformGrid.innerHTML=inactiveCards.map(x=>x.html).join('');
+ if(el.activePlatformCount)el.activePlatformCount.textContent=String(activeCards.length);
+ if(el.lockedPlatformCount)el.lockedPlatformCount.textContent=String(inactiveCards.length);
+ if(el.activePlatformCountBadge)el.activePlatformCountBadge.textContent=String(activeCards.length);
+ if(el.lockedPlatformCountBadge)el.lockedPlatformCountBadge.textContent=String(inactiveCards.length);
  $all('[data-launch-platform]').forEach(b=>b.onclick=()=>launchPlatform(b.dataset.launchPlatform,b.dataset.platformHref));
  $all('[data-request-locked]').forEach(b=>b.onclick=()=>showSubscription(b.dataset.requestLocked));
 }
@@ -132,6 +140,8 @@ async function applySession(session){
  }catch(err){showStatus(el.loginStatus,err.message||'تعذر تحميل الحساب.',true);el.loginPage.hidden=false;el.portalShell.hidden=true}
 }
 function handleNotice(){
+ let stored='';try{stored=sessionStorage.getItem('portal_notice')||'';sessionStorage.removeItem('portal_notice')}catch(_error){}
+ if(stored){el.portalNotice.hidden=false;el.portalNotice.textContent=stored;return}
  const n=new URLSearchParams(location.search).get('notice');
  if(n==='package_locked'){el.portalNotice.hidden=false;el.portalNotice.textContent='المنصة التي حاولت فتحها غير مشمولة في باقتك الحالية. اختر منصة مفعّلة أو اطلب ترقية الباقة.';history.replaceState({},'',location.pathname);return}
  if(n==='choose_platform'){el.portalNotice.hidden=false;el.portalNotice.textContent='تم توجيهك إلى بوابة المنصات. اختر بنفسك المنصة المفعّلة التي تريد الدخول إليها.';history.replaceState({},'',location.pathname);return}
@@ -155,21 +165,58 @@ function updatePlan(){
 }
 function showSubscription(product){if(product)$all('input[name="productCode"]').forEach(x=>x.checked=x.value===product);el.whatsappConfirmed.checked=false;hideStatus(el.subscriptionStatus);updatePlan();openModal('subscriptionModal')}
 async function requestActivation(){const p=selectedPlan();const eligibility=planEligibility(p.product,p.period);if(!eligibility.allowed)return showStatus(el.subscriptionStatus,eligibility.message,true);if(!el.whatsappConfirmed.checked)return;el.sendActivationRequestButton.disabled=true;try{const note=`طلب من البوابة الموحدة — ${p.label} — ${p.period==='monthly'?'شهري':'سنوي'} — ${eligibility.kind==='period_upgrade'?'ترقية من شهري إلى سنوي':eligibility.kind==='bundle_upgrade'?'ترقية إلى الباقة الشاملة مع حفظ المدة المتبقية':'اشتراك جديد'} — تم التواصل عبر واتساب على 00966582712620.`;const{error}=await db.rpc('premium_request_package_subscription',{p_product_code:p.product,p_billing_period:p.period,p_user_note:note});if(error)throw error;showStatus(el.subscriptionStatus,eligibility.kind==='period_upgrade'?'تم إرسال طلب الترقية السنوية. ستُضاف المدة الحالية المتبقية تلقائيًا عند التفعيل.':eligibility.kind==='bundle_upgrade'?'تم إرسال طلب الباقة الشاملة. ستُحفظ مدة باقتك الحالية وتعود بعد انتهاء الشاملة.':'تم إرسال طلب التفعيل إلى مدير النظام.');toast('تم إرسال الطلب')}catch(e){showStatus(el.subscriptionStatus,subscriptionErrorMessage(e),true)}finally{const latest=planEligibility(p.product,p.period);el.sendActivationRequestButton.disabled=!latest.allowed||!el.whatsappConfirmed.checked}}
-async function loadAdmin(){if(!isAdmin())return;showStatus(el.adminStatus,'جارٍ تحميل البيانات...');const[rr,ur,er]=await Promise.all([db.from('premium_subscription_requests').select('id,user_id,product_code,amount_sar,billing_period,status,user_note,requested_at,request_kind,upgrade_context').eq('status','pending').order('requested_at',{ascending:true}),db.from('premium_accounts').select('user_id,full_name,email,school_name,is_system_admin,is_active,created_at').order('created_at',{ascending:false}),db.from('premium_entitlements').select('user_id,product_code,billing_period,expires_at,is_active').order('expires_at',{ascending:false})]);const error=rr.error||ur.error||er.error;if(error)return showStatus(el.adminStatus,error.message,true);state.adminRequests=rr.data||[];state.adminUsers=ur.data||[];state.adminEntitlements=er.data||[];hideStatus(el.adminStatus);renderAdmin()}
+const PRESENTATION_AUDIENCE_LABELS={boys:'بنين',girls:'بنات'};
+async function loadAdmin(){
+ if(!isAdmin())return;showStatus(el.adminStatus,'جارٍ تحميل البيانات...');
+ const[rr,ur,er,cr]=await Promise.all([
+  db.from('premium_subscription_requests').select('id,user_id,product_code,amount_sar,billing_period,status,user_note,requested_at,request_kind,upgrade_context').eq('status','pending').order('requested_at',{ascending:true}),
+  db.from('premium_accounts').select('user_id,full_name,email,school_name,is_system_admin,is_active,created_at,presentation_audience_type').order('created_at',{ascending:false}),
+  db.from('premium_entitlements').select('user_id,product_code,billing_period,expires_at,is_active').order('expires_at',{ascending:false}),
+  db.from('premium_custom_presentation_requests').select('id,user_id,school_name,requester_name,title,category,stage,audience_gender,objective,desired_slides,delivery_notes,status,estimated_price_sar,created_at').in('status',['pending','contacted','quoted','in_progress']).order('created_at',{ascending:true})
+ ]);
+ const error=rr.error||ur.error||er.error||cr.error;if(error)return showStatus(el.adminStatus,error.message,true);
+ state.adminRequests=rr.data||[];state.adminUsers=ur.data||[];state.adminEntitlements=er.data||[];state.adminCustomRequests=cr.data||[];hideStatus(el.adminStatus);renderAdmin()
+}
 function adminRequestDescription(r){
  if(r.request_kind==='upgrade_period')return 'ترقية من الخطة الشهرية إلى السنوية مع إضافة المدة المتبقية.';
- if(r.request_kind==='upgrade_bundle'){
-   const items=r.upgrade_context?.source_packages||[];
-   const names=items.map(x=>LABELS[x.product_code]||x.product_code).join('، ');
-   return `ترقية إلى الباقة الشاملة مع حفظ المدة المتبقية${names?` في: ${names}`:''}.`;
- }
+ if(r.request_kind==='upgrade_bundle'){const items=r.upgrade_context?.source_packages||[];const names=items.map(x=>LABELS[x.product_code]||x.product_code).join('، ');return `ترقية إلى الباقة الشاملة مع حفظ المدة المتبقية${names?` في: ${names}`:''}.`;}
  return 'اشتراك جديد.';
 }
-function renderAdmin(){const userMap=Object.fromEntries(state.adminUsers.map(u=>[u.user_id,u]));el.adminRequestsList.innerHTML=state.adminRequests.length?state.adminRequests.map(r=>{const u=userMap[r.user_id]||{};return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(LABELS[r.product_code]||r.product_code)}</h4><p>${escapeHtml(u.school_name||u.full_name||'مستخدم')} — ${escapeHtml(u.email||'')}</p></div><span>${r.billing_period==='monthly'?'شهري':'سنوي'} · ${Number(r.amount_sar).toFixed(0)} ريال</span></div><p><strong>${escapeHtml(adminRequestDescription(r))}</strong></p><p>${escapeHtml(r.user_note||'')}</p><div class="actions"><button class="primary-button" data-approve="${r.id}">تفعيل الباقة</button><button class="danger-button" data-reject="${r.id}">رفض</button></div></article>`}).join(''):'<div class="status-box">لا توجد طلبات معلقة.</div>';
- const now=Date.now();el.adminUsersList.innerHTML=state.adminUsers.map(u=>{const active=state.adminEntitlements.filter(e=>e.user_id===u.user_id&&e.is_active!==false&&new Date(e.expires_at).getTime()>now);const packages=u.is_system_admin?['مدير النظام — جميع الباقات']:active.length?active.map(e=>`${LABELS[e.product_code]||e.product_code} حتى ${formatDate(e.expires_at)}`):['لا توجد باقة نشطة'];const self=u.user_id===state.user.id;return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(u.school_name||u.full_name||'مستخدم')}</h4><p>${escapeHtml(u.email||'')}</p></div><span>${u.is_system_admin?'مدير':'مستخدم'}</span></div><p>${packages.map(escapeHtml).join('<br>')}</p><div class="actions">${u.is_system_admin?`<button class="danger-button" data-admin-role="false" data-user-id="${u.user_id}" ${self?'disabled':''}>إلغاء صلاحية المدير</button>`:`<button class="secondary-button" data-admin-role="true" data-user-id="${u.user_id}">تعيين مدير</button>`}</div></article>`}).join('');
- $all('[data-approve]').forEach(b=>b.onclick=()=>approve(b.dataset.approve));$all('[data-reject]').forEach(b=>b.onclick=()=>rejectReq(b.dataset.reject));$all('[data-admin-role]').forEach(b=>b.onclick=()=>setAdmin(b.dataset.userId,b.dataset.adminRole==='true'))}
+function adminAudienceControl(u){
+ const selected=u.presentation_audience_type||'';
+ return `<div class="admin-audience-control"><div><strong>نوع طلاب العروض</strong><small>${selected?`النوع الحالي: ${escapeHtml(PRESENTATION_AUDIENCE_LABELS[selected]||selected)}`:'لم يحدد المستخدم النوع بعد'}</small></div><select data-audience-select="${u.user_id}" aria-label="نوع طلاب العروض"><option value="boys" ${selected==='boys'?'selected':''}>بنين</option><option value="girls" ${selected==='girls'?'selected':''}>بنات</option></select><button class="secondary-button" data-set-audience="${u.user_id}" type="button">${selected?'تغيير النوع':'تعيين النوع'}</button></div>`;
+}
+function renderAdmin(){
+ const userMap=Object.fromEntries(state.adminUsers.map(u=>[u.user_id,u]));
+ el.adminRequestsList.innerHTML=state.adminRequests.length?state.adminRequests.map(r=>{const u=userMap[r.user_id]||{};return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(LABELS[r.product_code]||r.product_code)}</h4><p>${escapeHtml(u.school_name||u.full_name||'مستخدم')} — ${escapeHtml(u.email||'')}</p></div><span>${r.billing_period==='monthly'?'شهري':'سنوي'} · ${Number(r.amount_sar).toFixed(0)} ريال</span></div><p><strong>${escapeHtml(adminRequestDescription(r))}</strong></p><p>${escapeHtml(r.user_note||'')}</p><div class="actions"><button class="primary-button" data-approve="${r.id}">تفعيل الباقة</button><button class="danger-button" data-reject="${r.id}">رفض</button></div></article>`}).join(''):'<div class="status-box">لا توجد طلبات معلقة.</div>';
+ const now=Date.now();
+ el.adminUsersList.innerHTML=state.adminUsers.map(u=>{
+  const active=state.adminEntitlements.filter(e=>e.user_id===u.user_id&&e.is_active!==false&&new Date(e.expires_at).getTime()>now);
+  const packages=u.is_system_admin?['مدير النظام — جميع الباقات']:active.length?active.map(e=>`${LABELS[e.product_code]||e.product_code} حتى ${formatDate(e.expires_at)}`):['لا توجد باقة نشطة'];
+  const self=u.user_id===state.user.id;
+  return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(u.school_name||u.full_name||'مستخدم')}</h4><p>${escapeHtml(u.email||'')}</p></div><span>${u.is_system_admin?'مدير':'مستخدم'}</span></div><p>${packages.map(escapeHtml).join('<br>')}</p>${adminAudienceControl(u)}<div class="actions">${u.is_system_admin?`<button class="danger-button" data-admin-role="false" data-user-id="${u.user_id}" ${self?'disabled':''}>إلغاء صلاحية المدير</button>`:`<button class="secondary-button" data-admin-role="true" data-user-id="${u.user_id}">تعيين مدير</button>`}</div></article>`
+ }).join('');
+ const categoryLabels={ministerial:'وزاري',qualitative:'نوعي',values:'قيمي',custom:'خاص'};const stageLabels={lower_primary:'الابتدائية الدنيا',upper_primary:'الابتدائية العليا',middle:'المتوسطة',secondary:'الثانوية'};const genderLabels={boys:'بنين',girls:'بنات'};
+ if(el.adminCustomRequestsList)el.adminCustomRequestsList.innerHTML=state.adminCustomRequests.length?state.adminCustomRequests.map(r=>`<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(r.title)}</h4><p>${escapeHtml(r.school_name||r.requester_name||'مستخدم')}</p></div><span>${escapeHtml(categoryLabels[r.category]||r.category)} · ${escapeHtml(stageLabels[r.stage]||r.stage)} · ${escapeHtml(genderLabels[r.audience_gender]||r.audience_gender)}</span></div><p><strong>الهدف:</strong> ${escapeHtml(r.objective)}</p><p>${r.desired_slides} شرائح${r.delivery_notes?` — ${escapeHtml(r.delivery_notes)}`:''}</p><div class="actions"><button class="secondary-button" data-custom-contacted="${r.id}">تم التواصل</button><button class="primary-button" data-custom-completed="${r.id}">مكتمل</button></div></article>`).join(''):'<div class="status-box">لا توجد طلبات عروض خاصة قيد المتابعة.</div>';
+ $all('[data-approve]').forEach(b=>b.onclick=()=>approve(b.dataset.approve));
+ $all('[data-reject]').forEach(b=>b.onclick=()=>rejectReq(b.dataset.reject));
+ $all('[data-admin-role]').forEach(b=>b.onclick=()=>setAdmin(b.dataset.userId,b.dataset.adminRole==='true'));
+ $all('[data-set-audience]').forEach(b=>b.onclick=()=>setPresentationAudience(b.dataset.setAudience));
+ $all('[data-custom-contacted]').forEach(b=>b.onclick=()=>updateCustomRequest(b.dataset.customContacted,'contacted'));
+ $all('[data-custom-completed]').forEach(b=>b.onclick=()=>updateCustomRequest(b.dataset.customCompleted,'completed'));
+}
+async function updateCustomRequest(id,status){const{error}=await db.rpc('premium_admin_update_custom_presentation_request',{p_request_id:id,p_status:status,p_estimated_price_sar:null,p_admin_note:status==='completed'?'تم إكمال الطلب من لوحة الإدارة':'تم التواصل مع العميل'});if(error)return showStatus(el.adminStatus,error.message,true);toast(status==='completed'?'تم إكمال طلب العرض':'تم تحديث حالة الطلب');await loadAdmin()}
 async function approve(id){const{error}=await db.rpc('premium_admin_activate_package_request',{p_request_id:id,p_admin_note:'تم التفعيل من البوابة الموحدة'});if(error)return showStatus(el.adminStatus,subscriptionErrorMessage(error),true);toast('تم تفعيل الباقة');await loadAdmin();await loadAccount();renderIdentity()}
 async function rejectReq(id){const{error}=await db.rpc('premium_admin_reject_request',{p_request_id:id,p_admin_note:'تم رفض الطلب من البوابة الموحدة'});if(error)return showStatus(el.adminStatus,error.message,true);toast('تم رفض الطلب');await loadAdmin()}
 async function setAdmin(userId,makeAdmin){if(!confirm(makeAdmin?'تعيين هذا الحساب مديرًا للنظام؟':'إلغاء صلاحية المدير؟'))return;const{error}=await db.rpc('premium_admin_set_role',{p_user_id:userId,p_is_admin:makeAdmin});if(error)return showStatus(el.adminStatus,error.message,true);toast(makeAdmin?'تم تعيين مدير':'تم إلغاء صلاحية المدير');await loadAdmin()}
-function bind(){el.signInButton.onclick=signIn;el.signUpButton.onclick=signUp;el.authPassword.addEventListener('keydown',e=>{if(e.key==='Enter')signIn()});el.signOutButton.onclick=signOut;el.openProfileButton.onclick=()=>openModal('profileModal');el.openSubscriptionButton.onclick=()=>showSubscription();el.openAdminButton.onclick=async()=>{openModal('adminModal');await loadAdmin()};el.schoolLogoInput.onchange=async()=>{try{state.pendingLogo=await imageToDataUrl(el.schoolLogoInput.files?.[0]);renderIdentity()}catch(e){showStatus(el.profileStatus,e.message,true)}};el.saveSchoolProfileButton.onclick=saveProfile;$all('[data-close-modal]').forEach(b=>b.onclick=()=>closeModal(b.dataset.closeModal));$all('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModal(m.id)});$all('input[name="productCode"],input[name="billingPeriod"]').forEach(x=>x.onchange=updatePlan);el.whatsappConfirmed.onchange=updatePlan;el.sendActivationRequestButton.onclick=requestActivation;$all('[data-quick-plan]').forEach(b=>b.onclick=()=>showSubscription(b.dataset.quickPlan));$all('[data-admin-tab]').forEach(b=>b.onclick=()=>{$all('[data-admin-tab]').forEach(x=>x.classList.toggle('active',x===b));el.adminRequestsPanel.hidden=b.dataset.adminTab!=='requests';el.adminUsersPanel.hidden=b.dataset.adminTab!=='users'});document.addEventListener('keydown',e=>{if(e.key==='Escape')$all('.modal:not([hidden])').forEach(m=>closeModal(m.id))})}
+async function setPresentationAudience(userId){
+ const select=document.querySelector(`[data-audience-select="${userId}"]`);const audience=select?.value;
+ if(!audience)return showStatus(el.adminStatus,'اختر نوع الطلاب أولًا.',true);
+ const label=PRESENTATION_AUDIENCE_LABELS[audience]||audience;
+ if(!confirm(`تغيير نوع عروض هذا المستخدم إلى ${label}؟ سيصبح هذا هو النوع الوحيد المتاح له.`))return;
+ const{error}=await db.rpc('premium_admin_set_presentation_audience',{p_user_id:userId,p_audience_type:audience});
+ if(error)return showStatus(el.adminStatus,error.message,true);
+ toast(`تم تعيين نوع العروض: ${label}`);await loadAdmin();if(userId===state.user.id){await loadAccount();renderIdentity()}
+}
+function bind(){el.signInButton.onclick=signIn;el.signUpButton.onclick=signUp;el.authPassword.addEventListener('keydown',e=>{if(e.key==='Enter')signIn()});el.signOutButton.onclick=signOut;if(el.portalSupportButton)el.portalSupportButton.onclick=()=>document.getElementById('unifiedSupportToggle')?.click();el.openProfileButton.onclick=()=>openModal('profileModal');el.openSubscriptionButton.onclick=()=>showSubscription();el.openAdminButton.onclick=async()=>{openModal('adminModal');await loadAdmin()};el.schoolLogoInput.onchange=async()=>{try{state.pendingLogo=await imageToDataUrl(el.schoolLogoInput.files?.[0]);renderIdentity()}catch(e){showStatus(el.profileStatus,e.message,true)}};el.saveSchoolProfileButton.onclick=saveProfile;$all('[data-close-modal]').forEach(b=>b.onclick=()=>closeModal(b.dataset.closeModal));$all('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)closeModal(m.id)});$all('input[name="productCode"],input[name="billingPeriod"]').forEach(x=>x.onchange=updatePlan);el.whatsappConfirmed.onchange=updatePlan;el.sendActivationRequestButton.onclick=requestActivation;$all('[data-quick-plan]').forEach(b=>b.onclick=()=>showSubscription(b.dataset.quickPlan));$all('[data-admin-tab]').forEach(b=>b.onclick=()=>{$all('[data-admin-tab]').forEach(x=>x.classList.toggle('active',x===b));el.adminRequestsPanel.hidden=b.dataset.adminTab!=='requests';el.adminUsersPanel.hidden=b.dataset.adminTab!=='users';if(el.adminCustomRequestsPanel)el.adminCustomRequestsPanel.hidden=b.dataset.adminTab!=='custom'});document.addEventListener('keydown',e=>{if(e.key==='Escape')$all('.modal:not([hidden])').forEach(m=>closeModal(m.id))})}
 async function init(){bind();if(!db)return showStatus(el.loginStatus,'تعذر تحميل الاتصال بقاعدة البيانات.',true);const{data}=await db.auth.getSession();await applySession(data.session);db.auth.onAuthStateChange((_e,s)=>setTimeout(()=>applySession(s),0))}init();

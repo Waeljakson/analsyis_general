@@ -7,7 +7,7 @@ const CURRENT_PACKAGE_CODE = "guidance_records";
 const UNIFIED_PLATFORM_ROUTES = {
   results_analysis: {label:"تحليل النتائج", href:"../analysis/index.html"},
   guidance_records: {label:"السجلات الرقمية", href:"../records/index.html"},
-  presentations: {label:"العروض التقديمية", href:"#", coming:true},
+  presentations: {label:"العروض التقديمية", href:"../presentations/index.html"},
   program_ideas: {label:"أفكار البرامج", href:"#", coming:true}
 };
 function unifiedLaunchKey(code){return `unified_platform_launch_${code}`;}
@@ -20,7 +20,7 @@ function cameFromUnifiedPortal(){
   return remembered;
 }
 function activeUnifiedEntitlements(){return (state.entitlements||[]).filter(e=>e.is_active!==false&&e.expires_at&&new Date(e.expires_at).getTime()>Date.now());}
-function unifiedHasAccess(code){const active=activeUnifiedEntitlements();return Boolean(state.account?.is_system_admin||active.some(e=>e.product_code==="all_access"||e.product_code===code)||active.length===0);}
+function unifiedHasAccess(code){const active=activeUnifiedEntitlements();return Boolean(state.account?.is_system_admin||active.some(e=>e.product_code==="all_access"||e.product_code===code));}
 function goToUnifiedPlatform(code){const item=UNIFIED_PLATFORM_ROUTES[code];if(!item||item.coming||!unifiedHasAccess(code))return;rememberUnifiedLaunch(code);location.href=`${item.href}?from=portal`;}
 const UNIFIED_PLATFORM_ICONS={
   results_analysis:'<svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
@@ -325,6 +325,42 @@ function selectedPlan(){
   };
 }
 
+
+function activePackageForSubscription(code){
+  const now=Date.now();return (state.entitlements||[]).find(e=>e.product_code===code&&e.is_active!==false&&new Date(e.expires_at).getTime()>now)||null;
+}
+function evaluatePremiumPlan(plan){
+  if(state.account?.is_system_admin)return{allowed:false,kind:'admin',message:'مدير النظام لديه صلاحية كاملة ولا يحتاج إلى اشتراك.'};
+  const bundle=activePackageForSubscription('all_access');const target=activePackageForSubscription(plan.productCode);
+  if(plan.productCode!=='all_access'&&bundle)return{allowed:false,kind:'covered',message:'أنت مشترك في الباقة الشاملة بالفعل، ومنصة السجلات مشمولة فيها.'};
+  if(target){
+    if(target.billing_period===plan.period)return{allowed:false,kind:'same',message:'أنت بالفعل مشترك في هذه الباقة بنفس الخطة.'};
+    if(target.billing_period==='yearly'&&plan.period==='monthly')return{allowed:false,kind:'downgrade',message:'لا يمكن الانتقال من الخطة السنوية إلى الشهرية أثناء سريان الاشتراك.'};
+    if(target.billing_period==='monthly'&&plan.period==='yearly')return{allowed:true,kind:'period_upgrade',message:`ترقية سنوية: سيُضاف العام الجديد بعد المدة الحالية، والمتبقي الآن ${formatRemainingTime(target.expires_at)}.`};
+  }
+  if(plan.productCode==='all_access'){
+    const active=(state.entitlements||[]).filter(e=>e.product_code!=='all_access'&&e.is_active!==false&&new Date(e.expires_at).getTime()>Date.now());
+    if(active.length)return{allowed:true,kind:'bundle_upgrade',message:'سيتم حفظ المدة المتبقية في باقتك الحالية، وتعود تلقائيًا بعد انتهاء الباقة الشاملة.'};
+  }
+  return{allowed:true,kind:'new',message:'يمكن إرسال طلب التفعيل بعد التواصل عبر واتساب.'};
+}
+
+function formatRemainingTime(expiresAt){
+  const ms=Math.max(0,new Date(expiresAt).getTime()-Date.now());
+  const totalHours=Math.ceil(ms/3600000);const days=Math.floor(totalHours/24);const hours=totalHours%24;
+  if(days>0)return `${days} يوم${days===1?'':'ًا'}${hours?` و${hours} ساعة`:''}`;
+  return hours>0?`${hours} ساعة`:'أقل من ساعة';
+}
+function subscriptionErrorMessage(error){
+  const raw=String(error?.message||error||'');
+  if(raw.includes('already_subscribed_same_plan'))return 'أنت بالفعل مشترك في هذه الباقة بنفس الخطة، ولا تحتاج إلى إرسال طلب تفعيل جديد.';
+  if(raw.includes('downgrade_not_allowed_while_active'))return 'لا يمكن الانتقال من الخطة السنوية إلى الشهرية أثناء سريان الاشتراك الحالي.';
+  if(raw.includes('all_access_already_covers_package'))return 'الباقة الشاملة مفعّلة بالفعل وتشمل هذه المنصة، لذلك لا يمكن طلب باقة منفصلة لها.';
+  if(raw.includes('request_not_pending'))return 'هذا الطلب تمت مراجعته بالفعل.';
+  if(raw.includes('request_not_found'))return 'لم يتم العثور على طلب التفعيل.';
+  return raw||'تعذر تنفيذ العملية.';
+}
+
 function setView(view){
   state.currentView=view;
   document.querySelectorAll(".app-view").forEach(v=>v.classList.toggle("active-view",v.id===`${view}View`));
@@ -581,9 +617,8 @@ function applyAccountUI(){
   [ [el.headerSchoolLogo,el.headerLogoPlaceholder],[el.schoolLogoPreview,el.settingsLogoPlaceholder] ].forEach(([img,placeholder])=>{if(logo){img.src=logo;img.hidden=false;placeholder.hidden=true;}else{img.hidden=true;placeholder.hidden=false;}});
   if(el.requestPremiumButton){
     const entitlement=activeEntitlement();
-    const fullAccess=a.is_system_admin||entitlement?.product_code==="all_access";
-    el.requestPremiumButton.hidden=fullAccess;
-    el.requestPremiumButton.textContent=isPremiumAccess()?"ترقية للباقة الشاملة أو تجديد":"طلب تفعيل Premium";
+    el.requestPremiumButton.hidden=Boolean(a.is_system_admin);
+    el.requestPremiumButton.textContent=entitlement?.product_code==="all_access"?"إدارة أو ترقية الباقة الشاملة":isPremiumAccess()?"ترقية للباقة الشاملة أو السنوية":"طلب تفعيل Premium";
   }
   updateRecordIdentity();applySecurity();
 }
@@ -597,55 +632,38 @@ async function saveSchoolProfile(){
 }
 
 function showPaymentModal(){
-  if(state.account?.is_system_admin||activeEntitlement()?.product_code==="all_access"){
-    showToast("الباقة الشاملة مفعلة بالفعل وتتيح جميع المنصات.");
+  if(state.account?.is_system_admin){
+    showToast("مدير النظام لديه صلاحية كاملة لجميع المنصات.");
     return;
   }
   updatePaymentModal();el.paymentModal.hidden=false;
 }
 function closePaymentModal(){el.paymentModal.hidden=true;}
 function updatePaymentModal(){
-  const plan=selectedPlan();
+  const plan=selectedPlan();const eligibility=evaluatePremiumPlan(plan);
   el.paymentPlanInputs.forEach(input=>input.closest("label")?.classList.toggle("selected",input.checked));
-  el.paymentModalDescription.textContent=`${plan.label} — ${plan.period==="monthly"?"شهري":"سنوي"} — ${plan.amount} ريالًا. تواصل عبر واتساب ثم أرسل طلب التفعيل.`;
-  const school=state.account?.school_name||"غير محدد";
-  const user=state.account?.full_name||state.user?.email||"مستخدم";
-  const message=[
-    "السلام عليكم، أرغب في طلب تفعيل اشتراك.",
-    `المنصة الحالية: ${PACKAGE_LABELS.guidance_records}`,
-    `الباقة المطلوبة: ${plan.label}`,
-    `المدة: ${plan.period==="monthly"?"شهرية":"سنوية"} — ${plan.amount} ريالًا`,
-    `الاسم: ${user}`,
-    `المدرسة: ${school}`,
-    `البريد: ${state.user?.email||""}`
-  ].join("\n");
+  el.paymentModalDescription.textContent=`${plan.label} — ${plan.period==="monthly"?"شهري":"سنوي"} — ${plan.amount} ريالًا. ${eligibility.message}`;
+  const school=state.account?.school_name||"غير محدد";const user=state.account?.full_name||state.user?.email||"مستخدم";
+  const message=["السلام عليكم، أرغب في طلب تفعيل اشتراك.",`المنصة الحالية: ${PACKAGE_LABELS.guidance_records}`,`الباقة المطلوبة: ${plan.label}`,`المدة: ${plan.period==="monthly"?"شهرية":"سنوية"} — ${plan.amount} ريالًا`,`نوع الطلب: ${eligibility.kind==='period_upgrade'?'ترقية سنوية مع إضافة المدة المتبقية':eligibility.kind==='bundle_upgrade'?'ترقية شاملة مع حفظ المدة الحالية':'اشتراك جديد'}`,`الاسم: ${user}`,`المدرسة: ${school}`,`البريد: ${state.user?.email||""}`].join("\n");
   el.whatsappContactButton.href=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   el.paymentConfirmText.textContent=`أؤكد أنني تواصلت عبر واتساب بخصوص ${plan.label} ${plan.period==="monthly"?"الشهرية":"السنوية"}.`;
-  el.paymentSecurityNote.textContent=`سيظهر الطلب لمدير النظام باسم «${plan.label}». لن يتم التفعيل إلا بعد التواصل عبر واتساب.`;
-  el.confirmPremiumRequestButton.disabled=!el.paymentConfirmCheckbox.checked;
+  el.paymentSecurityNote.textContent=eligibility.message;
+  el.confirmPremiumRequestButton.textContent=eligibility.kind==='period_upgrade'?'إرسال طلب الترقية السنوية':eligibility.kind==='bundle_upgrade'?'إرسال طلب الباقة الشاملة':'إرسال طلب التفعيل';
+  el.confirmPremiumRequestButton.disabled=!eligibility.allowed||!el.paymentConfirmCheckbox.checked;
+  return eligibility;
 }
 async function requestPremium(){
-  if(!el.paymentConfirmCheckbox.checked)return;
-  const plan=selectedPlan();
+  const plan=selectedPlan();const eligibility=evaluatePremiumPlan(plan);
+  if(!eligibility.allowed)return showToast(eligibility.message,true);
+  if(!el.paymentConfirmCheckbox.checked)return showToast("يجب التواصل عبر واتساب أولًا ثم تأكيد التواصل.",true);
   el.confirmPremiumRequestButton.disabled=true;el.confirmPremiumRequestButton.textContent="جارٍ إرسال الطلب...";
   try{
-    const note=[
-      `مصدر الطلب: ${PACKAGE_LABELS.guidance_records}`,
-      `الباقة المطلوبة: ${plan.label}`,
-      `المدة: ${plan.period==="monthly"?"شهرية":"سنوية"} بقيمة ${plan.amount} ريالًا`,
-      `المدرسة: ${state.account?.school_name||"غير محددة"}`,
-      "تم التواصل عبر واتساب"
-    ].join(" | ");
-    const{error}=await db.rpc("premium_request_package_subscription",{
-      p_product_code:plan.productCode,
-      p_billing_period:plan.period,
-      p_user_note:note
-    });
-    if(error)throw error;
+    const note=[`مصدر الطلب: ${PACKAGE_LABELS.guidance_records}`,`الباقة المطلوبة: ${plan.label}`,`المدة: ${plan.period==="monthly"?"شهرية":"سنوية"} بقيمة ${plan.amount} ريالًا`,`نوع الطلب: ${eligibility.kind==='period_upgrade'?'ترقية سنوية مع إضافة المدة المتبقية':eligibility.kind==='bundle_upgrade'?'ترقية شاملة مع حفظ مدة الباقة الحالية':'اشتراك جديد'}`,`المدرسة: ${state.account?.school_name||"غير محددة"}`,"تم التواصل عبر واتساب"].join(" | ");
+    const{error}=await db.rpc("premium_request_package_subscription",{p_product_code:plan.productCode,p_billing_period:plan.period,p_user_note:note});if(error)throw error;
     closePaymentModal();
-    showToast(`تم إرسال طلب ${plan.label}. لن يتم التفعيل إلا بعد التواصل عبر واتساب.`);
-  }catch(error){showToast(error.message||"تعذر إرسال الطلب.",true);}
-  finally{el.confirmPremiumRequestButton.textContent="إرسال طلب التفعيل";el.confirmPremiumRequestButton.disabled=!el.paymentConfirmCheckbox.checked;}
+    showToast(eligibility.kind==='period_upgrade'?"تم إرسال طلب الترقية السنوية، وسيتم احتساب المدة المتبقية تلقائيًا.":eligibility.kind==='bundle_upgrade'?"تم إرسال طلب الباقة الشاملة، وستعود مدة باقتك الحالية بعد انتهاء الشاملة.":`تم إرسال طلب ${plan.label}.`);
+  }catch(error){showToast(subscriptionErrorMessage(error),true);}
+  finally{const latest=evaluatePremiumPlan(selectedPlan());el.confirmPremiumRequestButton.textContent=latest.kind==='period_upgrade'?'إرسال طلب الترقية السنوية':latest.kind==='bundle_upgrade'?'إرسال طلب الباقة الشاملة':'إرسال طلب التفعيل';el.confirmPremiumRequestButton.disabled=!latest.allowed||!el.paymentConfirmCheckbox.checked;}
 }
 
 function applySecurity(){
@@ -690,7 +708,7 @@ async function loadAdminData(){
   if(!state.account?.is_system_admin)return;showBox(el.adminStatus,"جارٍ تحميل بيانات الإدارة...");
   try{
     const[requestsRes,usersRes,entitlementsRes]=await Promise.all([
-      db.from("premium_subscription_requests").select("id,user_id,product_code,amount_sar,billing_period,duration_months,status,user_note,requested_at").eq("status","pending").order("requested_at",{ascending:true}),
+      db.from("premium_subscription_requests").select("id,user_id,product_code,amount_sar,billing_period,duration_months,status,user_note,requested_at,request_kind,upgrade_context").eq("status","pending").order("requested_at",{ascending:true}),
       db.from("premium_accounts").select("user_id,full_name,email,school_name,is_system_admin,is_active,created_at").order("created_at",{ascending:false}),
       db.from("premium_entitlements").select("user_id,product_code,billing_period,expires_at,is_active").order("expires_at",{ascending:false})
     ]);
@@ -699,11 +717,16 @@ async function loadAdminData(){
     renderAdminLists();await loadAdminSupportThreads();hideBox(el.adminStatus);
   }catch(error){showBox(el.adminStatus,error.message||"تعذر تحميل بيانات الإدارة.",true);}
 }
+function adminRequestDescription(r){
+  if(r.request_kind==="upgrade_period")return "ترقية من الشهرية إلى السنوية مع إضافة المدة المتبقية.";
+  if(r.request_kind==="upgrade_bundle")return "ترقية إلى الباقة الشاملة مع حفظ مدة الباقة الحالية واستعادتها بعد انتهاء الشاملة.";
+  return "اشتراك جديد.";
+}
 function renderAdminLists(){
   const userMap=new Map(state.adminUsers.map(u=>[u.user_id,u]));const now=Date.now();
   el.subscriptionRequestsList.innerHTML=state.adminRequests.length?state.adminRequests.map(r=>{
     const u=userMap.get(r.user_id)||{};const period=r.billing_period==="monthly"?"شهري":"سنوي";const packageLabel=PACKAGE_LABELS[r.product_code]||r.product_code||"باقة غير محددة";
-    return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(packageLabel)}</h4><p>${escapeHtml(u.school_name||u.full_name||"مستخدم")} — ${escapeHtml(u.email||"")}</p></div><span class="admin-role-badge">${formatDateTime(r.requested_at)}</span></div><p>${period} — ${Number(r.amount_sar).toFixed(0)} ريال</p><p>${escapeHtml(r.user_note||"")}</p><div class="actions"><button class="primary-button compact-button" data-approve-request="${r.id}" type="button">تفعيل ${escapeHtml(packageLabel)}</button><button class="ghost-button compact-button" data-reject-request="${r.id}" type="button">رفض</button></div></article>`;
+    return `<article class="admin-item"><div class="admin-item-head"><div><h4>${escapeHtml(packageLabel)}</h4><p>${escapeHtml(u.school_name||u.full_name||"مستخدم")} — ${escapeHtml(u.email||"")}</p></div><span class="admin-role-badge">${formatDateTime(r.requested_at)}</span></div><p>${period} — ${Number(r.amount_sar).toFixed(0)} ريال</p><p><strong>${escapeHtml(adminRequestDescription(r))}</strong></p><p>${escapeHtml(r.user_note||"")}</p><div class="actions"><button class="primary-button compact-button" data-approve-request="${r.id}" type="button">تفعيل ${escapeHtml(packageLabel)}</button><button class="ghost-button compact-button" data-reject-request="${r.id}" type="button">رفض</button></div></article>`;
   }).join(""):`<div class="empty-state">لا توجد طلبات معلقة.</div>`;
   el.premiumUsersList.innerHTML=state.adminUsers.length?state.adminUsers.map(u=>{
     const self=u.user_id===state.user.id;
@@ -714,8 +737,8 @@ function renderAdminLists(){
 }
 async function approveRequest(id){
   const{error}=await db.rpc("premium_admin_activate_package_request",{p_request_id:id,p_admin_note:"تم التفعيل من لوحة إدارة منصة السجلات الرقمية"});
-  if(error)return showBox(el.adminStatus,error.message,true);
-  showBox(el.adminStatus,"تم تفعيل الباقة المحددة فقط.");
+  if(error)return showBox(el.adminStatus,subscriptionErrorMessage(error),true);
+  showBox(el.adminStatus,"تم التفعيل مع تطبيق قواعد الترقية وحفظ المدة المتبقية.");
   await loadAdminData();
 }
 async function rejectRequest(id){
@@ -769,8 +792,7 @@ async function handleSession(session){
     await loadAccount(state.user);
     // يجب اختيار المنصة من لوحة المنصات أولًا، حتى لحساب مدير النظام.
     if(!cameFromUnifiedPortal()){window.location.replace("../index.html?notice=choose_platform");return;}
-    const hasActiveOtherPackage=state.entitlements.some(e=>e.is_active!==false&&new Date(e.expires_at).getTime()>Date.now());
-    if(hasActiveOtherPackage&&!state.packageAccess&&!state.account?.is_system_admin){window.location.replace("../index.html?notice=package_locked");return;}
+    if(!state.packageAccess&&!state.account?.is_system_admin){window.location.replace("../index.html?notice=package_locked");return;}
     renderUnifiedPlatformSwitcher();
     renderCatalog();
     el.archiveTypeFilter.innerHTML=`<option value="">كل السجلات</option>${Object.entries(RECORDS).map(([k,def])=>`<option value="${k}">${escapeHtml(def.title)}</option>`).join("")}`;
