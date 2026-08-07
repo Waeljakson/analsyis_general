@@ -1,16 +1,14 @@
 {
-  "version": "18.0.0",
-  "name": "Luxury Student Guidance Certificates",
+  "version": "19.0.8",
+  "name": "Calendar Opens Without a Saved Plan",
   "released_at": "2026-08-07",
   "features": [
-    "Luxury certificate creation platform",
-    "Gift access for any active yearly package or comprehensive package",
-    "Excellence, appreciation and congratulations categories",
-    "Elegant student wording and parent congratulations",
-    "Six premium certificate designs",
-    "Individual and batch A4 landscape printing",
-    "Automatic school identity and student audience wording",
-    "Program names connected to the achievement reports library",
-    "Unified navigation and support chat"
+    "Smart Calendar opens normally even when the authenticated user has no saved counselor plan",
+    "A clear administrative alert says لم تقم بتسجيل خطة and links directly to the plan platform",
+    "Users can still add and manage manual calendar events without a saved plan",
+    "A successful empty Supabase plan result clears stale local plan cache",
+    "Local plan cache is used only when the remote plan request fails",
+    "The global notification center also surfaces the no-plan alert across platform pages",
+    "Existing rule remains: every calendar event is automatically a reminder"
   ]
 }
