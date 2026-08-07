@@ -1,11 +1,11 @@
 {
-  "version": "17.2.0",
-  "name": "Compact Unified Header Navigation",
+  "version": "17.3.0",
+  "name": "Unified Support Chat Everywhere",
   "released_at": "2026-08-07",
   "features": [
-    "Messages removed from the top platform switcher to improve header spacing",
-    "Messages platform remains available from the main portal dashboard",
-    "Five primary work platforms remain in the unified header",
-    "Access-aware locked states preserved"
+    "Support chat added to Achievement Reports",
+    "Support chat added to Student Counselor Messages",
+    "The same support conversation is shared across all platforms",
+    "Direct REST fallback avoids coupling Reports and Messages to the Supabase JavaScript SDK"
   ]
 }
