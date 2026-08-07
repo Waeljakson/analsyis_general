@@ -15,3 +15,5 @@
 @media(min-width:1151px){.individual-plan-actions{grid-template-columns:repeat(4,1fr)}}
 
 .subscription-options{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+.platform-card.reports .platform-icon{background:linear-gradient(135deg,#256f9f,#22a6a1)}.platform-card.reports .platform-card-accent{background:linear-gradient(90deg,#256f9f,#22a6a1)}

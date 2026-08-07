@@ -1,20 +1,18 @@
 {
-  "version": "14.1.0",
-  "release": "Annual parent messaging library",
-  "new_features": [
-    "annual_only_messages_library",
-    "subscription_check_timeout_fix",
-    "direct_rest_annual_access_check",
-    "12800_plus_generated_messages",
-    "boys_girls_audience_lock",
-    "copy_and_whatsapp",
-    "aptitude_and_achievement_test_messages",
-    "favorites_and_filters"
+  "version": "16.0.0",
+  "name": "تقارير الإنجاز",
+  "released": "2026-08-07",
+  "features": [
+    "تقارير برامج جاهزة",
+    "رفع صور الشواهد",
+    "طباعة PDF وWord",
+    "تغيير بنين وبنات",
+    "حفظ المسودات محليًا"
   ],
-  "new_assets": [
-    "messages/index.html",
-    "messages/app.js",
-    "messages/styles.css"
-  ],
-  "pages_source": "main:/"
+  "assets": [
+    "app-v12.js",
+    "styles-v12.css",
+    "reports/index.html",
+    "messages/index.html"
+  ]
 }

@@ -61,6 +61,7 @@
         </div>
         <div class="header-actions">
           <span id="audienceBadge" class="pill">—</span>
+          <button id="changeAudienceButton" class="header-link" type="button">تغيير بنين / بنات</button>
           <span class="pill">للباقات السنوية فقط</span>
           <a class="header-link" href="../index.html">العودة للبوابة</a>
         </div>
@@ -372,11 +373,25 @@
       var whats=document.querySelectorAll('[data-whatsapp]');for(var k=0;k<whats.length;k++)whats[k].onclick=function(){var m=findMessage(this.getAttribute('data-whatsapp'));if(!m)return;saveRecent(m.id);window.open('https://wa.me/?text='+encodeURIComponent(personalized(m.text)),'_blank','noopener')};
     }
 
+
+    function persistAudienceChoice(newAudience){
+      if(newAudience!=='boys'&&newAudience!=='girls')return Promise.reject(new Error('invalid_audience_type'));
+      return api('/rest/v1/rpc/premium_set_platform_audience',{method:'POST',token:state.session.access_token,body:{p_audience_type:newAudience}}).then(function(account){
+        state.audience=newAudience;
+        state.account=account||state.account||{};
+        localStorage.setItem('messages_audience_v15',newAudience);
+        state.messages=generateMessages();
+        $('audienceBadge').textContent=newAudience==='girls'?'صياغات الطالبات':'صياغات الطلاب';
+        applyFilters();
+        toast('تم تغيير الصياغات إلى '+(newAudience==='girls'?'الطالبات':'الطلاب'));
+      });
+    }
+
     function startApp(access){
       state.account=access.account||{};state.messages=generateMessages();state.favorites=readJSON('messages_favorites_v15',{});state.recent=readJSON('messages_recent_v15',[]);
       $('categoryFilter').insertAdjacentHTML('beforeend',CATEGORY_DEFS.map(function(d){return '<option value="'+escapeHTML(d.id)+'">'+escapeHTML(d.label)+'</option>'}).join(''));
       $('totalCount').textContent=state.messages.length.toLocaleString('ar-SA');$('categoryCount').textContent=CATEGORY_DEFS.length.toLocaleString('ar-SA');$('favoriteCount').textContent=Object.keys(state.favorites).length.toLocaleString('ar-SA');
-      $('audienceBadge').textContent=state.audience==='girls'?'صياغات الطالبات':'صياغات الطلاب';$('accountInfo').textContent=(state.account.school_name||state.account.full_name||state.user.email||'الحساب السنوي')+' · اشتراك سنوي مفعل';
+      $('audienceBadge').textContent=state.audience==='girls'?'صياغات الطالبات':'صياغات الطلاب';$('changeAudienceButton').onclick=function(){var next=state.audience==='girls'?'boys':'girls';var label=next==='girls'?'الطالبات':'الطلاب';if(!confirm('تغيير جميع الرسائل إلى صياغات '+label+'؟'))return;persistAudienceChoice(next).catch(function(error){console.error(error);toast('تعذر حفظ نوع الطلاب، حاول مرة أخرى')})};$('accountInfo').textContent=(state.account.school_name||state.account.full_name||state.user.email||'الحساب السنوي')+' · اشتراك سنوي مفعل';
       var filterIds=['searchInput','stageFilter','categoryFilter','toneFilter'];for(var i=0;i<filterIds.length;i++)$(filterIds[i]).addEventListener(filterIds[i]==='searchInput'?'input':'change',applyFilters);
       var personalize=['studentName','className','subjectName','schoolName','counselorName'];for(var j=0;j<personalize.length;j++)$(personalize[j]).addEventListener('input',function(){renderMore(true)});
       $('clearFilters').onclick=function(){$('searchInput').value='';$('stageFilter').value='all';$('categoryFilter').value='all';$('toneFilter').value='all';state.view='all';setViewButtons();applyFilters()};
