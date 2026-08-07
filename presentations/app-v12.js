@@ -70,7 +70,7 @@ function planMeta(){
 }
 function renderPlatformSwitcher(){
   const plan=planMeta();
-  el.platformSwitcher.innerHTML=Object.entries(UNIFIED_PLATFORM_ROUTES).map(([code,item])=>{
+  el.platformSwitcher.innerHTML=Object.entries(UNIFIED_PLATFORM_ROUTES).filter(([code])=>code!=="messages_library").map(([code,item])=>{
     const icon=UNIFIED_PLATFORM_ICONS[code]||"";
     if(item.coming)return`<span class="platform-tab coming" aria-disabled="true"><span class="platform-tab-icon">${icon}</span><span class="platform-tab-copy"><strong>${escapeHtml(item.label)}</strong><small>قريبًا</small></span></span>`;
     if(!hasAccess(code))return`<span class="platform-tab locked" aria-disabled="true"><span class="platform-tab-icon">${icon}</span><span class="platform-tab-copy"><strong>${escapeHtml(item.label)}</strong><small>غير مفعّلة</small></span></span>`;

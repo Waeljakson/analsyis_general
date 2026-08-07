@@ -125,7 +125,7 @@ function renderUnifiedPlatformSwitcher(){
   const badge=document.getElementById('platformPlanBadge');
   if(!bar||!box||!badge||!state.user){if(bar)bar.hidden=true;return;}
   const plan=unifiedPlanMeta();
-  box.innerHTML=Object.entries(UNIFIED_PLATFORM_ROUTES).map(([code,item])=>{
+  box.innerHTML=Object.entries(UNIFIED_PLATFORM_ROUTES).filter(([code])=>code!=="messages_library").map(([code,item])=>{
     const icon=UNIFIED_PLATFORM_ICONS[code]||'';
     if(item.coming)return `<span class="platform-tab coming" aria-disabled="true"><span class="platform-tab-icon">${icon}</span><span class="platform-tab-copy"><strong>${item.label}</strong><small>قريبًا</small></span></span>`;
     if(!unifiedHasAccess(code))return `<span class="platform-tab locked" aria-disabled="true"><span class="platform-tab-icon">${icon}</span><span class="platform-tab-copy"><strong>${item.label}</strong><small>غير مفعّلة</small></span></span>`;

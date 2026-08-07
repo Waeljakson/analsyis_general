@@ -1,11 +1,11 @@
 {
-  "version": "17.1.0",
-  "name": "Unified Platform Header Navigation",
+  "version": "17.2.0",
+  "name": "Compact Unified Header Navigation",
   "released_at": "2026-08-07",
   "features": [
-    "Unified top navigation added to Messages and Achievement Reports",
-    "All six active platforms shown in every platform header",
-    "Access-aware locked states",
-    "Reports and Messages navigation synchronized"
+    "Messages removed from the top platform switcher to improve header spacing",
+    "Messages platform remains available from the main portal dashboard",
+    "Five primary work platforms remain in the unified header",
+    "Access-aware locked states preserved"
   ]
 }
