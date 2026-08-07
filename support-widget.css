@@ -1,4 +1,3 @@
-
 /* Unified support chat — shared by portal and platform pages */
 .unified-support-toggle{
   position:fixed;left:22px;bottom:22px;z-index:1850;border:0;border-radius:18px;
@@ -15,6 +14,8 @@
   display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid #d6e3ea;border-radius:24px;
   box-shadow:0 28px 85px rgba(2,32,52,.28);font-family:"Cairo",sans-serif;color:#183244;
 }
+/* V17.3.1: force the panel to stay closed until the user clicks the support button. */
+.unified-support-panel[hidden]{display:none!important}
 .unified-support-head{padding:15px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(135deg,#075985,#0f766e);color:#fff}
 .unified-support-head-copy{display:flex;align-items:center;gap:11px}.unified-support-head-icon{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:1.2rem;border:1px solid rgba(255,255,255,.18)}
 .unified-support-head span,.unified-support-head strong,.unified-support-head small{display:block}.unified-support-head span{font-size:.62rem;color:#a7f3d0;font-weight:800}.unified-support-head strong{font-size:.9rem}.unified-support-head small{font-size:.62rem;color:rgba(255,255,255,.72);margin-top:2px}
