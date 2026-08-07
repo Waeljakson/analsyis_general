@@ -158,14 +158,14 @@ function renderPlatforms(){
 }
 async function applySession(session){
  state.user=session?.user||null;state.account=null;state.entitlements=[];state.promoAccesses=[];state.pendingLogo=null;
- if(!state.user){clearPlatformLaunches();el.loginPage.hidden=false;el.portalShell.hidden=true;return}
+ if(!state.user){clearPlatformLaunches();if(el.authBoot)el.authBoot.hidden=true;el.loginPage.hidden=false;el.portalShell.hidden=true;return}
  try{
    await loadAccount();
    if(state.account?.is_active===false)throw new Error('هذا الحساب موقوف. تواصل مع مدير النظام.');
-   // تسجيل الدخول ينتهي دائمًا في لوحة اختيار المنصات، ولا يتم فتح أي منصة تلقائيًا.
+   // V19.0.9: لا نعرض نموذج تسجيل الدخول أثناء فحص الجلسة؛ ننتقل مباشرة من شاشة التحقق إلى البوابة.
    clearPlatformLaunches();
-   el.loginPage.hidden=true;el.portalShell.hidden=false;renderIdentity();handleNotice();
- }catch(err){showStatus(el.loginStatus,err.message||'تعذر تحميل الحساب.',true);el.loginPage.hidden=false;el.portalShell.hidden=true}
+   if(el.authBoot)el.authBoot.hidden=true;el.loginPage.hidden=true;el.portalShell.hidden=false;renderIdentity();handleNotice();
+ }catch(err){if(el.authBoot)el.authBoot.hidden=true;showStatus(el.loginStatus,err.message||'تعذر تحميل الحساب.',true);el.loginPage.hidden=false;el.portalShell.hidden=true}
 }
 function handleNotice(){
  let stored='';try{stored=sessionStorage.getItem('portal_notice')||'';sessionStorage.removeItem('portal_notice')}catch(_error){}
@@ -281,4 +281,4 @@ function bind(){
  $all('[data-admin-tab]').forEach(b=>b.onclick=()=>{const tab=b.dataset.adminTab;$all('[data-admin-tab]').forEach(x=>x.classList.toggle('active',x===b));el.adminRequestsPanel.hidden=tab!=='requests';if(el.adminPromoPanel)el.adminPromoPanel.hidden=tab!=='promo';el.adminUsersPanel.hidden=tab!=='users';if(el.adminCustomRequestsPanel)el.adminCustomRequestsPanel.hidden=tab!=='custom'});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')$all('.modal:not([hidden])').forEach(m=>closeModal(m.id))})
 }
-async function init(){bind();if(!db)return showStatus(el.loginStatus,'تعذر تحميل الاتصال بقاعدة البيانات.',true);const{data}=await db.auth.getSession();await applySession(data.session);db.auth.onAuthStateChange((_e,s)=>setTimeout(()=>applySession(s),0))}init();
+async function init(){bind();if(!db){if(el.authBoot)el.authBoot.hidden=true;el.loginPage.hidden=false;return showStatus(el.loginStatus,'تعذر تحميل الاتصال بقاعدة البيانات.',true)}try{const{data}=await db.auth.getSession();await applySession(data.session);db.auth.onAuthStateChange((_e,s)=>setTimeout(()=>applySession(s),0))}catch(err){if(el.authBoot)el.authBoot.hidden=true;el.portalShell.hidden=true;el.loginPage.hidden=false;showStatus(el.loginStatus,err?.message||'تعذر التحقق من جلسة الدخول.',true)}}init();

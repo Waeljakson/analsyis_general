@@ -1,14 +1,13 @@
 {
-  "version": "19.0.8",
-  "name": "Calendar Opens Without a Saved Plan",
+  "version": "19.0.9",
+  "name": "Seamless Auth Transition + Notification Layer Fix",
   "released_at": "2026-08-07",
   "features": [
-    "Smart Calendar opens normally even when the authenticated user has no saved counselor plan",
-    "A clear administrative alert says لم تقم بتسجيل خطة and links directly to the plan platform",
-    "Users can still add and manage manual calendar events without a saved plan",
-    "A successful empty Supabase plan result clears stale local plan cache",
-    "Local plan cache is used only when the remote plan request fails",
-    "The global notification center also surfaces the no-plan alert across platform pages",
-    "Existing rule remains: every calendar event is automatically a reminder"
+    "Prevents the login screen from flashing while an existing Supabase session is being checked",
+    "Shows a neutral session-check screen until authentication resolution finishes",
+    "Shows the real login page only when no valid session exists or authentication cannot be resolved",
+    "Raises the smart reminder bell, panel, and in-app toasts above the unified service header z-index",
+    "Preserves all V19.0.8 calendar-without-plan and all-calendar-events-are-alerts behavior",
+    "Bumps notification assets to cache version 19.0.9"
   ]
 }
