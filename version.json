@@ -1,13 +1,11 @@
 {
-  "version": "17.0.0",
-  "name": "Promo Gift Codes",
+  "version": "17.1.0",
+  "name": "Unified Platform Header Navigation",
   "released_at": "2026-08-07",
   "features": [
-    "Admin-created gift promo codes",
-    "1-10 day access",
-    "Specific platform or all-access",
-    "One or multiple redemptions",
-    "User self-redemption",
-    "Temporary messages-library gifts"
+    "Unified top navigation added to Messages and Achievement Reports",
+    "All six active platforms shown in every platform header",
+    "Access-aware locked states",
+    "Reports and Messages navigation synchronized"
   ]
 }

@@ -1,3 +1,10 @@
+# V17.1 — Unified Platform Header Navigation
+
+- Added the unified portal navigation header to Messages and Achievement Reports.
+- Added Achievement Reports and Messages to the header switcher in Analysis, Records, Presentations, and Counselor Plan.
+- Header now displays all six active platforms consistently.
+- Messages remains annual-only in access-aware navigation.
+
 # V16.1.0 — تقارير الإنجاز كباقة مستقلة
 
 - إضافة منصة تقارير الإنجاز ضمن الباقات الفردية: 10 ريالات شهريًا أو 50 ريالًا سنويًا.

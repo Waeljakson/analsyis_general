@@ -8,7 +8,9 @@ const UNIFIED_PLATFORM_ROUTES = {
   results_analysis: {label:"تحليل النتائج", href:"../analysis/index.html"},
   guidance_records: {label:"السجلات الرقمية", href:"../records/index.html"},
   presentations: {label:"العروض التقديمية", href:"../presentations/index.html"},
-  program_ideas: {label:"أفكار البرامج", href:"#", coming:true}
+  counselor_plan: {label:"خطة الموجه", href:"../plans/index.html"},
+  achievement_reports: {label:"تقارير الإنجاز", href:"../reports/index.html"},
+  messages_library: {label:"مراسلات ولي الأمر", href:"../messages/index.html"}
 };
 function unifiedLaunchKey(code){return `unified_platform_launch_${code}`;}
 function rememberUnifiedLaunch(code){try{sessionStorage.setItem(unifiedLaunchKey(code),String(Date.now()));sessionStorage.setItem("unified_last_platform",code);}catch(_error){}}
@@ -20,13 +22,15 @@ function cameFromUnifiedPortal(){
   return remembered;
 }
 function activeUnifiedEntitlements(){return (state.entitlements||[]).filter(e=>e.is_active!==false&&e.expires_at&&new Date(e.expires_at).getTime()>Date.now());}
-function unifiedHasAccess(code){const active=activeUnifiedEntitlements();return Boolean(state.account?.is_system_admin||active.some(e=>e.product_code==="all_access"||e.product_code===code));}
+function unifiedHasAccess(code){const active=activeUnifiedEntitlements();if(state.account?.is_system_admin)return true;if(code==='messages_library')return active.some(e=>e.billing_period==='yearly');return active.some(e=>e.product_code==='all_access'||e.product_code===code);}
 function goToUnifiedPlatform(code){const item=UNIFIED_PLATFORM_ROUTES[code];if(!item||item.coming||!unifiedHasAccess(code))return;rememberUnifiedLaunch(code);location.href=`${item.href}?from=portal`;}
 const UNIFIED_PLATFORM_ICONS={
   results_analysis:'<svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
   guidance_records:'<svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg>',
   presentations:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21l4-5 4 5M8 9h3M8 12h7"/></svg>',
-  program_ideas:'<svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8.5 15.5A7 7 0 1 1 15.5 15.5C14.5 16.2 14 17 14 18h-4c0-1-.5-1.8-1.5-2.5Z"/></svg>'
+  counselor_plan:'<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h3"/><path d="m15 16 1.4 1.4L19 14.8"/></svg>',
+  achievement_reports:'<svg viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m15 17 1.5 1.5L20 15"/></svg>',
+  messages_library:'<svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 9h8M8 13h5"/></svg>'
 };
 function unifiedPlanMeta(){
   const active=activeUnifiedEntitlements();
