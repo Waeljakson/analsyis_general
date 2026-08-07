@@ -1,18 +1,13 @@
 {
-  "version": "16.0.0",
-  "name": "تقارير الإنجاز",
-  "released": "2026-08-07",
+  "version": "17.0.0",
+  "name": "Promo Gift Codes",
+  "released_at": "2026-08-07",
   "features": [
-    "تقارير برامج جاهزة",
-    "رفع صور الشواهد",
-    "طباعة PDF وWord",
-    "تغيير بنين وبنات",
-    "حفظ المسودات محليًا"
-  ],
-  "assets": [
-    "app-v12.js",
-    "styles-v12.css",
-    "reports/index.html",
-    "messages/index.html"
+    "Admin-created gift promo codes",
+    "1-10 day access",
+    "Specific platform or all-access",
+    "One or multiple redemptions",
+    "User self-redemption",
+    "Temporary messages-library gifts"
   ]
 }

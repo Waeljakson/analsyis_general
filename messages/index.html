@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b6678">
   <meta name="description" content="مكتبة مراسلات الموجه الطلابي لأولياء الأمور — متاحة للباقات السنوية فقط.">
-  <meta name="app-version" content="15.0.0">
+  <meta name="app-version" content="15.1.0">
   <title>مراسلات الموجه الطلابي</title>
   <style>
     :root{--bg:#f4f8fa;--card:#fff;--text:#17323b;--muted:#667b83;--primary:#0b6678;--primary2:#0e8297;--line:#dce8ec;--soft:#eaf4f6;--success:#17795d;--warn:#a45c00;--danger:#b33b46;--shadow:0 18px 44px rgba(31,78,91,.10);font-family:"Segoe UI",Tahoma,Arial,sans-serif}
@@ -16,7 +16,7 @@
     .gate-icon{width:64px;height:64px;border-radius:20px;background:var(--soft);display:grid;place-items:center;margin:0 auto 16px;font-size:30px}.gate h1,.gate h2{margin:8px 0 10px}.gate p{color:var(--muted);line-height:1.9;margin:0 auto 18px;max-width:500px}
     .gate-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.diagnostic{margin-top:18px;text-align:right;background:#f7fafb;border:1px dashed var(--line);border-radius:14px;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;color:#53666d}
     .btn{border:0;border-radius:12px;padding:11px 17px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:700}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#085565}.btn-secondary{background:var(--soft);color:var(--primary);border:1px solid #cfe2e7}.btn-danger{background:#fff2f3;color:var(--danger);border:1px solid #f1cfd3}.btn:disabled{opacity:.55;cursor:not-allowed}
-    .app-header{background:linear-gradient(135deg,#075767,#0d8195);color:#fff;padding:26px 24px 58px;position:relative;overflow:hidden}.app-header:after{content:"";position:absolute;inset:auto -10% -80px;width:120%;height:120px;background:var(--bg);border-radius:50% 50% 0 0/55% 55% 0 0}.header-inner{width:min(1240px,100%);margin:auto;display:flex;gap:24px;align-items:center;justify-content:space-between;position:relative;z-index:1}.eyebrow{font-size:13px;opacity:.85}.app-header h1{margin:7px 0 8px;font-size:clamp(26px,4vw,42px)}.app-header p{margin:0;opacity:.9;line-height:1.8}.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pill{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}.header-link{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.38);padding:9px 13px;border-radius:11px}
+    .app-header{background:linear-gradient(135deg,#075767,#0d8195);color:#fff;padding:26px 24px 58px;position:relative;overflow:hidden}.app-header:after{content:"";position:absolute;inset:auto -10% -80px;width:120%;height:120px;background:var(--bg);border-radius:50% 50% 0 0/55% 55% 0 0}.header-inner{width:min(1240px,100%);margin:auto;display:flex;gap:24px;align-items:center;justify-content:space-between;position:relative;z-index:1}.eyebrow{font-size:13px;opacity:.85}.app-header h1{margin:7px 0 8px;font-size:clamp(26px,4vw,42px)}.app-header p{margin:0;opacity:.9;line-height:1.8}.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pill{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700}.header-link{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.38);padding:9px 13px;border-radius:11px}.header-action-button{background:#fff;color:var(--primary);border:1px solid #fff;box-shadow:0 7px 18px rgba(0,0,0,.12);padding:10px 15px}.header-action-button:hover{background:#eaf4f6;color:#075767}
     main{width:min(1240px,calc(100% - 28px));margin:-25px auto 50px;position:relative;z-index:2}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(40,83,96,.06)}.stat strong{display:block;font-size:25px;color:var(--primary)}.stat span{font-size:13px;color:var(--muted)}
     .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:17px;margin-bottom:14px;box-shadow:0 10px 30px rgba(40,83,96,.05)}.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel-title h2{font-size:17px;margin:0}.panel-title small{color:var(--muted)}
     .filters{display:grid;grid-template-columns:2fr repeat(3,1fr) auto;gap:10px}.field,.select{width:100%;border:1px solid var(--line);background:#fbfdfe;border-radius:12px;padding:11px 12px;outline:none;color:var(--text)}.field:focus,.select:focus{border-color:#75adba;box-shadow:0 0 0 3px rgba(11,102,120,.08)}
@@ -55,13 +55,13 @@
     <header class="app-header">
       <div class="header-inner">
         <div>
-          <div class="eyebrow">منصة الموجه الطلابي · الإصدار 15</div>
+          <div class="eyebrow">منصة الموجه الطلابي · الإصدار 15.1</div>
           <h1>مراسلات أولياء الأمور</h1>
           <p>مكتبة كبيرة من الرسائل المختصرة والراقية، جاهزة للنسخ والإرسال عبر واتساب.</p>
         </div>
         <div class="header-actions">
           <span id="audienceBadge" class="pill">—</span>
-          <button id="changeAudienceButton" class="header-link" type="button">تغيير بنين / بنات</button>
+          <button id="changeAudienceButton" class="btn header-action-button" type="button">تغيير بنين / بنات</button>
           <span class="pill">للباقات السنوية فقط</span>
           <a class="header-link" href="../index.html">العودة للبوابة</a>
         </div>

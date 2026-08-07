@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl" data-platform-name="بوابة خدمات الموجه الطلابي">
 <head>
-  <meta name="app-version" content="16.0.0">
+  <meta name="app-version" content="17.0.0">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#086c8f">
@@ -68,6 +68,7 @@
           <button id="portalSupportButton" class="toolbar-button" type="button"><span class="toolbar-icon">?</span><span><b>الدعم الفني</b><small>محادثة مباشرة</small></span></button>
           <button id="openProfileButton" class="toolbar-button" type="button"><span class="toolbar-icon">⌂</span><span><b>بيانات المدرسة</b><small>الاسم والشعار</small></span></button>
           <button id="openSubscriptionButton" class="toolbar-button accent" type="button"><span class="toolbar-icon">★</span><span><b>الباقات</b><small>تفعيل أو ترقية</small></span></button>
+          <button id="openPromoButton" class="toolbar-button gift" type="button"><span class="toolbar-icon">🎁</span><span><b>كود هدية</b><small>تفعيل برومو كود</small></span></button>
           <button id="openAdminButton" class="toolbar-button admin" type="button" hidden><span class="toolbar-icon">⚙</span><span><b>إدارة النظام</b><small>الطلبات والحسابات</small></span></button>
           <button id="signOutButton" class="toolbar-button logout" type="button"><span class="toolbar-icon">↪</span><span><b>تسجيل الخروج</b><small>إنهاء الجلسة</small></span></button>
         </div>
@@ -118,6 +119,7 @@
               <button class="plan-choice" data-quick-plan="guidance_records" type="button"><span>▤</span> السجلات الرقمية</button>
               <button class="plan-choice" data-quick-plan="presentations" type="button"><span>▰</span> العروض التقديمية</button>
               <button class="plan-choice" data-quick-plan="counselor_plan" type="button"><span>▦</span> خطة الموجه</button>
+              <button class="plan-choice" data-quick-plan="achievement_reports" type="button"><span>▧</span> تقارير الإنجاز</button>
             </div>
           </article>
           <article class="compact-plan-card comprehensive-plan">
@@ -151,6 +153,7 @@
         <label class="option-card"><input type="radio" name="productCode" value="guidance_records"><span><b>منصة السجلات الرقمية</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card"><input type="radio" name="productCode" value="presentations"><span><b>منصة العروض التقديمية</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card"><input type="radio" name="productCode" value="counselor_plan"><span><b>منصة خطة الموجه الطلابي</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
+        <label class="option-card"><input type="radio" name="productCode" value="achievement_reports"><span><b>منصة تقارير الإنجاز</b><small>10 شهريًا أو 50 سنويًا</small></span></label>
         <label class="option-card featured-option"><input type="radio" name="productCode" value="all_access"><span><b>الباقة الشاملة</b><small>50 شهريًا أو 300 سنويًا</small></span></label>
       </div>
       <div class="period-options"><label><input type="radio" name="billingPeriod" value="monthly" checked><span>شهري</span></label><label><input type="radio" name="billingPeriod" value="yearly"><span>سنوي</span></label></div>
@@ -161,18 +164,56 @@
     </div>
   </div>
 
+  <div id="promoModal" class="modal" hidden>
+    <div class="modal-card compact-modal promo-redeem-modal">
+      <div class="modal-head"><div><span>هدية من المنصة</span><h2>تفعيل برومو كود</h2></div><button class="icon-button" data-close-modal="promoModal">×</button></div>
+      <div class="gift-hero"><div class="gift-hero-icon">🎁</div><div><strong>لديك كود هدية؟</strong><p>أدخل الكود لتفعيل باقة شاملة أو منصة محددة لمدة من يوم إلى 10 أيام.</p></div></div>
+      <label><span>البرومو كود</span><input id="promoRedeemCode" class="promo-code-input" type="text" maxlength="32" autocomplete="off" placeholder="GIFT-XXXXXXXX"></label>
+      <button id="redeemPromoButton" class="primary-button" type="button">تفعيل الهدية</button>
+      <div id="promoRedeemStatus" class="status-box" hidden></div>
+      <p class="promo-note">يستخدم الكود وفق عدد الاستخدامات الذي حدده مدير النظام، وتبدأ مدة الهدية فور التفعيل.</p>
+    </div>
+  </div>
+
   <div id="adminModal" class="modal" hidden>
-    <div class="modal-card admin-modal"><div class="modal-head"><div><span>مدير النظام</span><h2>طلبات التفعيل والحسابات</h2></div><button class="icon-button" data-close-modal="adminModal">×</button></div>
-      <div class="admin-tabs"><button class="admin-tab active" data-admin-tab="requests">طلبات التفعيل</button><button class="admin-tab" data-admin-tab="custom">طلبات العروض الخاصة</button><button class="admin-tab" data-admin-tab="users">المستخدمون والمديرون</button></div>
+    <div class="modal-card admin-modal"><div class="modal-head"><div><span>مدير النظام</span><h2>طلبات التفعيل والحسابات وأكواد الهدايا</h2></div><button class="icon-button" data-close-modal="adminModal">×</button></div>
+      <div class="admin-tabs"><button class="admin-tab active" data-admin-tab="requests">طلبات التفعيل</button><button class="admin-tab" data-admin-tab="promo">أكواد الهدايا</button><button class="admin-tab" data-admin-tab="custom">طلبات العروض الخاصة</button><button class="admin-tab" data-admin-tab="users">المستخدمون والمديرون</button></div>
       <div id="adminStatus" class="status-box" hidden></div>
       <section id="adminRequestsPanel"><div id="adminRequestsList" class="admin-list"></div></section>
+      <section id="adminPromoPanel" hidden>
+        <div class="promo-admin-layout">
+          <div class="promo-create-card">
+            <div class="promo-section-head"><div><span>إنشاء كود جديد</span><h3>برومو كود هدية</h3></div><button id="generatePromoCodeButton" class="secondary-button" type="button">توليد كود</button></div>
+            <div class="promo-form-grid">
+              <label><span>الكود</span><input id="adminPromoCode" type="text" maxlength="32" placeholder="يُولّد تلقائيًا أو اكتب كودًا"></label>
+              <label><span>الباقة أو المنصة</span><select id="adminPromoProduct">
+                <option value="all_access">الباقة الشاملة</option>
+                <option value="results_analysis">تحليل النتائج التعليمية</option>
+                <option value="guidance_records">السجلات الرقمية</option>
+                <option value="presentations">العروض التقديمية</option>
+                <option value="counselor_plan">خطة الموجه الطلابي</option>
+                <option value="achievement_reports">تقارير الإنجاز</option>
+                <option value="messages_library">مكتبة الرسائل</option>
+              </select></label>
+              <label><span>مدة الهدية</span><select id="adminPromoDays">
+                <option value="1">يوم واحد</option><option value="2">يومان</option><option value="3">3 أيام</option><option value="4">4 أيام</option><option value="5">5 أيام</option><option value="6">6 أيام</option><option value="7">7 أيام</option><option value="8">8 أيام</option><option value="9">9 أيام</option><option value="10">10 أيام</option>
+              </select></label>
+              <label><span>عدد مرات الاستخدام</span><input id="adminPromoMaxUses" type="number" min="1" max="100" value="1"></label>
+              <label class="promo-expiry-field"><span>صلاحية استخدام الكود — اختياري</span><input id="adminPromoExpiresAt" type="datetime-local"></label>
+            </div>
+            <button id="createPromoCodeButton" class="primary-button" type="button">إنشاء البرومو كود</button>
+            <div id="promoAdminStatus" class="status-box" hidden></div>
+          </div>
+          <div><div class="promo-section-head"><div><span>الأكواد السابقة</span><h3>إدارة أكواد الهدايا</h3></div></div><div id="adminPromoList" class="admin-list promo-code-list"></div></div>
+        </div>
+      </section>
       <section id="adminCustomRequestsPanel" hidden><div id="adminCustomRequestsList" class="admin-list"></div></section>
       <section id="adminUsersPanel" hidden><div id="adminUsersList" class="admin-list"></div></section>
     </div>
   </div>
 
   <div id="toast" class="toast" hidden></div>
-  <script src="app-v12.js?v=16.0.0"></script>
+  <script src="app-v12.js?v=17.0.0"></script>
   <script src="support-widget.js?v10.1.0-20260806"></script>
 </body>
 </html>
