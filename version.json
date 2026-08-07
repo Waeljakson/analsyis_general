@@ -1,11 +1,16 @@
 {
-  "version": "17.3.0",
-  "name": "Unified Support Chat Everywhere",
+  "version": "18.0.0",
+  "name": "Luxury Student Guidance Certificates",
   "released_at": "2026-08-07",
   "features": [
-    "Support chat added to Achievement Reports",
-    "Support chat added to Student Counselor Messages",
-    "The same support conversation is shared across all platforms",
-    "Direct REST fallback avoids coupling Reports and Messages to the Supabase JavaScript SDK"
+    "Luxury certificate creation platform",
+    "Gift access for any active yearly package or comprehensive package",
+    "Excellence, appreciation and congratulations categories",
+    "Elegant student wording and parent congratulations",
+    "Six premium certificate designs",
+    "Individual and batch A4 landscape printing",
+    "Automatic school identity and student audience wording",
+    "Program names connected to the achievement reports library",
+    "Unified navigation and support chat"
   ]
 }
